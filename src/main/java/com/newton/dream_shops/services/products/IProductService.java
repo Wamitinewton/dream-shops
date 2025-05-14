@@ -2,6 +2,7 @@ package com.newton.dream_shops.services.products;
 
 import com.newton.dream_shops.models.Product;
 import com.newton.dream_shops.request.AddProductsRequest;
+import com.newton.dream_shops.request.ProductsUpdateRequest;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public interface IProductService {
 
     Product getProductById(Long id);
 
-    void updateProduct(Product product, Long productId);
+    Product updateProduct(ProductsUpdateRequest product, Long productId);
 
     void deleteProduct(Long id);
 

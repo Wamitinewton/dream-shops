@@ -1,4 +1,4 @@
-package com.newton.dream_shops;
+package com.newton.dream_shops.application;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

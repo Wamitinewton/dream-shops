@@ -94,8 +94,4 @@ public class ImageService implements IImageService {
         }
     }
 
-    private String buildDownloadUrl(Long imageId) {
-        String basePath = "/api/vi/images/download/";
-        return imageId != null ? basePath + imageId : null;
-    }
 }

@@ -17,19 +17,23 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @AllArgsConstructor
 @RestController
-@RequestMapping("/api/v1/products")
+@RequestMapping("/${api.prefix}/products")
 public class ProductController {
 
     private final IProductService productService;
 
     @GetMapping("/all")
     public ResponseEntity<ApiResponse> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
-        return ResponseEntity.ok(new ApiResponse("Successfully retrieved all products", products));
+        try {
+            List<Product> products = productService.getAllProducts();
+            return ResponseEntity.ok(new ApiResponse("Successfully retrieved all products", products));
+        } catch (Exception e) {
+            return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));
+        }
     }
 
     @GetMapping("/product/{id}/product")
-    public ResponseEntity<ApiResponse> getProductById(Long id) {
+    public ResponseEntity<ApiResponse> getProductById(@PathVariable Long id) {
         try {
             Product product = productService.getProductById(id);
             return ResponseEntity.ok(new ApiResponse("Successfully retrieved product", product));
@@ -133,5 +137,14 @@ public class ProductController {
         }
     }
 
+    @GetMapping("/product/count/by-brand/and-name")
+    public ResponseEntity<ApiResponse> countProductsByBrandAndName(@RequestParam String brand, @RequestParam String name) {
+        try {
+            var productCount = productService.countProductsByBrandAndName(brand, name);
+            return ResponseEntity.ok(new ApiResponse("Successfully retrieved product count", productCount));
+        } catch (Exception e) {
+            return ResponseEntity.ok().body(new ApiResponse(e.getMessage(), null));
+        }
+    }
 
 }

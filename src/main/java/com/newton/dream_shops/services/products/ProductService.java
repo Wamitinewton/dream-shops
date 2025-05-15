@@ -1,6 +1,5 @@
 package com.newton.dream_shops.services.products;
 
-import com.newton.dream_shops.exception.ProductNotFoundException;
 import com.newton.dream_shops.exception.ResourceNotFoundException;
 import com.newton.dream_shops.models.Category;
 import com.newton.dream_shops.models.Product;
@@ -8,6 +7,7 @@ import com.newton.dream_shops.repository.CategoryRepository;
 import com.newton.dream_shops.repository.ProductRepository;
 import com.newton.dream_shops.request.AddProductsRequest;
 import com.newton.dream_shops.request.ProductsUpdateRequest;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -58,10 +58,20 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    public List<Product> getProductsByCategoryId(Long categoryId) {
+
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
+        return productRepository.findByCategory(category);
+
+    }
+
+
+    @Override
     public Product updateProduct(ProductsUpdateRequest productsUpdateRequest, Long productId) {
         return productRepository.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, productsUpdateRequest))
-                .map(productRepository :: save)
+                .map(productRepository::save)
                 .orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
     }
 
@@ -77,6 +87,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    @Transactional
     public void deleteProduct(Long id) {
         productRepository.findById(id).ifPresentOrElse(productRepository::delete, () -> {
             throw new ResourceNotFoundException("Product Not Found");

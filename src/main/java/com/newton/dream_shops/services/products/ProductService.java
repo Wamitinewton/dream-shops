@@ -1,6 +1,7 @@
 package com.newton.dream_shops.services.products;
 
 import com.newton.dream_shops.exception.ProductNotFoundException;
+import com.newton.dream_shops.exception.ResourceNotFoundException;
 import com.newton.dream_shops.models.Category;
 import com.newton.dream_shops.models.Product;
 import com.newton.dream_shops.repository.CategoryRepository;
@@ -53,7 +54,7 @@ public class ProductService implements IProductService {
 
     @Override
     public Product getProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+        return productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
     }
 
     @Override
@@ -61,7 +62,7 @@ public class ProductService implements IProductService {
         return productRepository.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, productsUpdateRequest))
                 .map(productRepository :: save)
-                .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
     }
 
     private Product updateExistingProduct(Product existingProduct, ProductsUpdateRequest productsUpdateRequest) {
@@ -78,7 +79,7 @@ public class ProductService implements IProductService {
     @Override
     public void deleteProduct(Long id) {
         productRepository.findById(id).ifPresentOrElse(productRepository::delete, () -> {
-            throw new ProductNotFoundException("Product Not Found");
+            throw new ResourceNotFoundException("Product Not Found");
         });
     }
 

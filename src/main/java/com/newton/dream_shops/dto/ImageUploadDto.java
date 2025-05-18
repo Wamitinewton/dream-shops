@@ -7,9 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
-import java.sql.SQLException;
 
 @Data
 @Builder
@@ -20,41 +18,50 @@ public class ImageUploadDto {
     private Long productId;
     private String fileName;
     private String fileType;
-    private byte[] imageData;
 
     /**
      * Factory Method to create an ImageUploadDto from MultiPartFile
      */
-
     public static ImageUploadDto fromMultipartFile(MultipartFile file) throws IOException {
         return ImageUploadDto.builder()
                 .file(file)
                 .fileName(file.getOriginalFilename())
                 .fileType(file.getContentType())
-                .imageData(file.getBytes())
+                .build();
+    }
+
+    /**
+     * Creates an ImageUploadDto from MultiPartFile with product ID
+     */
+    public static ImageUploadDto fromMultipartFile(MultipartFile file, Long productId) throws IOException {
+        return ImageUploadDto.builder()
+                .file(file)
+                .fileName(file.getOriginalFilename())
+                .fileType(file.getContentType())
+                .productId(productId)
                 .build();
     }
 
     /**
      * Converts this DTO to an Image Entity
+     * The imageUrl and storagePath will be set after Firebase upload
      */
-
-    public Image toImageEntity() throws SQLException {
+    public Image toImageEntity() {
         Image image = new Image();
         image.setFileName(this.fileName);
         image.setFileType(this.fileType);
-        image.setImage(new SerialBlob(this.imageData));
         return image;
     }
 
     /**
-     * Convert Image entity to ImageDto for client response
+     * Convert Image entity to ImageResponseDto for client response
      */
     public static ImageResponseDto toImageDto(Image image) {
-        ImageResponseDto imageResponseDto = new ImageResponseDto();
-        imageResponseDto.setImageId(image.getId());
-        imageResponseDto.setImageName(image.getFileName());
-        imageResponseDto.setDownloadUrl(image.getDownloadUrl());
-        return imageResponseDto;
+        return ImageResponseDto.builder()
+                .imageId(image.getId())
+                .imageName(image.getFileName())
+                .fileType(image.getFileType())
+                .imageUrl(image.getImageUrl())
+                .build();
     }
 }

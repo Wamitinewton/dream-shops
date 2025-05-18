@@ -1,22 +1,21 @@
 package com.newton.dream_shops.services.images;
 
+import com.newton.dream_shops.dto.FirebaseFileDto;
 import com.newton.dream_shops.dto.ImageResponseDto;
 import com.newton.dream_shops.dto.ImageUploadDto;
 import com.newton.dream_shops.exception.ResourceNotFoundException;
 import com.newton.dream_shops.models.Image;
 import com.newton.dream_shops.models.Product;
 import com.newton.dream_shops.repository.ImageRepository;
+import com.newton.dream_shops.services.firebase.FirebaseStorageService;
 import com.newton.dream_shops.services.products.IProductService;
-import com.newton.dream_shops.utility.ImageUrlBuilder;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.sql.rowset.serial.SerialBlob;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 public class ImageService implements IImageService {
     private final ImageRepository imageRepository;
     private final IProductService productService;
-    private final ImageUrlBuilder imageUrlBuilder;
+    private final FirebaseStorageService firebaseStorageService;
 
     @Override
     public Image getImageById(Long id) {
@@ -36,9 +35,16 @@ public class ImageService implements IImageService {
 
     @Override
     public void deleteImageById(Long id) {
-        imageRepository.findById(id).ifPresentOrElse(imageRepository::delete, () -> {
-            new ResourceNotFoundException("Image Not Found");
-        });
+        Image image = imageRepository.findById(id).orElseThrow(() ->
+            new ResourceNotFoundException("Image Not Found")
+        );
+
+        if (image.getStoragePath() != null) {
+            boolean deleted = firebaseStorageService.deleteFile(image.getStoragePath());
+            if (!deleted) {
+                log.error("Failed to delete image from firebase storage: {}", image.getStoragePath());
+            }
+        }
     }
 
     @Override
@@ -58,23 +64,23 @@ public class ImageService implements IImageService {
 
     private Optional<ImageResponseDto> processAndSaveImage(MultipartFile file, Product product) {
         try {
-            // Convert MultiPartFile to our DTO
             ImageUploadDto uploadDto = ImageUploadDto.fromMultipartFile(file);
-
             Image image = uploadDto.toImageEntity();
             image.setProduct(product);
 
-            image.setDownloadUrl(imageUrlBuilder.buildPlaceholderUrl());
+            //Upload to Firebase
+            FirebaseFileDto firebaseFileDto = firebaseStorageService.uploadFile(file, image.getFileName());
+            image.setImageUrl(firebaseFileDto.getDownloadUrl());
+            image.setStoragePath(firebaseFileDto.getStoragePath());
+
             Image savedImage = imageRepository.save(image);
 
-            savedImage.setDownloadUrl(imageUrlBuilder.buildDownloadUrl(savedImage.getId()));
-            savedImage = imageRepository.save(savedImage);
-
-            //Convert to response DTO
             return Optional.of(ImageUploadDto.toImageDto(savedImage));
-        } catch (IOException | SQLException e) {
-            log.error("Error saving image: {}", file.getOriginalFilename(), e.getMessage());
+        } catch (IOException e) {
+            log.error("Error uploading image: {}", file.getOriginalFilename(), e.getMessage());
             return Optional.empty();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -82,15 +88,24 @@ public class ImageService implements IImageService {
     @Transactional
     public void updateImage(MultipartFile file, Long imageId) {
         Image image = getImageById(imageId);
+
         try {
+            //Delete old file from Firebase first
+            if (image.getStoragePath() != null) {
+                firebaseStorageService.deleteFile(image.getStoragePath());
+            }
+
             ImageUploadDto uploadDto = ImageUploadDto.fromMultipartFile(file);
+
+            FirebaseFileDto firebaseFileDto = firebaseStorageService.uploadFile(file, uploadDto.getFileName());
             image.setFileName(uploadDto.getFileName());
             image.setFileType(uploadDto.getFileType());
-            image.setImage(new SerialBlob(uploadDto.getImageData()));
+            image.setImageUrl(firebaseFileDto.getDownloadUrl());
+            image.setStoragePath(firebaseFileDto.getStoragePath());
+
             imageRepository.save(image);
-        } catch (IOException | SQLException e) {
-            log.error("Error updating image: {}", imageId, e.getMessage());
-            throw new RuntimeException(e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

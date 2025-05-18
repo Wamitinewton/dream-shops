@@ -1,5 +1,6 @@
 package com.newton.dream_shops.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,6 +31,7 @@ public class Product {
     private Category category;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnoreProperties("product")
     private List<Image> images;
 
     public Product(String name, String brand, String description, BigDecimal price, int inventory, Category category) {

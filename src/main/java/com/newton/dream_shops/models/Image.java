@@ -1,5 +1,7 @@
 package com.newton.dream_shops.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,11 +24,13 @@ public class Image {
 
 
     // LOB specifies that a large object type such as image should be persisted in the database
+    @JsonIgnore
     @Lob
     private Blob image;
     private String downloadUrl;
 
     @ManyToOne
     @JoinColumn(name = "product_id")
+    @JsonIgnoreProperties("images")
     private Product product;
 }

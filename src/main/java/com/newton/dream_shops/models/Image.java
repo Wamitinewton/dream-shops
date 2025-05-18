@@ -22,12 +22,12 @@ public class Image {
     private String fileName;
     private String fileType;
 
+    @Column(length = 2048)
+    private String imageUrl;
 
-    // LOB specifies that a large object type such as image should be persisted in the database
-    @JsonIgnore
-    @Lob
-    private Blob image;
-    private String downloadUrl;
+    @Column(length = 1024)
+    private String storagePath;
+
 
     @ManyToOne
     @JoinColumn(name = "product_id")

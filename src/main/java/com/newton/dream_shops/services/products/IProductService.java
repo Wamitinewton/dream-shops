@@ -1,5 +1,6 @@
 package com.newton.dream_shops.services.products;
 
+import com.newton.dream_shops.dto.ProductDto;
 import com.newton.dream_shops.models.Product;
 import com.newton.dream_shops.request.AddProductsRequest;
 import com.newton.dream_shops.request.ProductsUpdateRequest;
@@ -30,4 +31,8 @@ public interface IProductService {
     List<Product> getProductByBrandAndName(String brand, String name);
 
     Long countProductsByBrandAndName(String brand, String name);
+
+    List<ProductDto> getConvertedProducts(List<Product> products);
+
+    ProductDto toProductDto(Product product);
 }

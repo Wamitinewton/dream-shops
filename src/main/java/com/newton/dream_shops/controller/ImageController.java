@@ -5,6 +5,7 @@ import com.newton.dream_shops.exception.ResourceNotFoundException;
 import com.newton.dream_shops.models.Image;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.images.IImageService;
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -35,7 +36,8 @@ public class ImageController {
         }
     }
 
-    @GetMapping("/image/download/{imageId}")
+    @GetMapping("/download/{imageId}")
+    @Transactional
     public ResponseEntity<Resource> downloadImage(@PathVariable Long imageId) throws SQLException {
         Image image = imageService.getImageById(imageId);
         ByteArrayResource resource = new ByteArrayResource(image.getImage().getBytes(1, (int) image.getImage().length()));

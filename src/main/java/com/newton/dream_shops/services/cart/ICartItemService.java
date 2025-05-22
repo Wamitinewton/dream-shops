@@ -1,6 +1,6 @@
 package com.newton.dream_shops.services.cart;
 
-import com.newton.dream_shops.models.CartItem;
+import com.newton.dream_shops.models.cart.CartItem;
 
 public interface ICartItemService {
     void addItemToCart(Long cartId, Long productId, int quantity);

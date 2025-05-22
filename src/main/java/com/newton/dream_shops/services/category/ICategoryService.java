@@ -1,6 +1,6 @@
 package com.newton.dream_shops.services.category;
 
-import com.newton.dream_shops.models.Category;
+import com.newton.dream_shops.models.category.Category;
 
 import java.util.List;
 

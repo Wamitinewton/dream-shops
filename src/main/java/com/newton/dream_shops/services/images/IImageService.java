@@ -1,7 +1,7 @@
 package com.newton.dream_shops.services.images;
 
-import com.newton.dream_shops.dto.ImageResponseDto;
-import com.newton.dream_shops.models.Image;
+import com.newton.dream_shops.dto.image.ImageResponseDto;
+import com.newton.dream_shops.models.image.Image;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

@@ -1,9 +1,9 @@
 package com.newton.dream_shops.services.cart;
 
 import com.newton.dream_shops.exception.ResourceNotFoundException;
-import com.newton.dream_shops.models.Cart;
-import com.newton.dream_shops.repository.CartItemRepository;
-import com.newton.dream_shops.repository.CartRepository;
+import com.newton.dream_shops.models.cart.Cart;
+import com.newton.dream_shops.repository.cart.CartItemRepository;
+import com.newton.dream_shops.repository.cart.CartRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -2,8 +2,8 @@ package com.newton.dream_shops.services.category;
 
 import com.newton.dream_shops.exception.AlreadyExistsException;
 import com.newton.dream_shops.exception.ResourceNotFoundException;
-import com.newton.dream_shops.models.Category;
-import com.newton.dream_shops.repository.CategoryRepository;
+import com.newton.dream_shops.models.category.Category;
+import com.newton.dream_shops.repository.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

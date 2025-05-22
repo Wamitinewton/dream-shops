@@ -4,6 +4,7 @@ import com.newton.dream_shops.exception.ResourceNotFoundException;
 import com.newton.dream_shops.models.Cart;
 import com.newton.dream_shops.repository.CartItemRepository;
 import com.newton.dream_shops.repository.CartRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,7 @@ public class CartService implements ICartService {
         return cartRepository.save(cart);
     }
 
+    @Transactional
     @Override
     public void clearCart(Long id) {
         Cart cart = getCart(id);
@@ -45,7 +47,6 @@ public class CartService implements ICartService {
     @Override
     public Long generateNewCartId() {
         Cart newCart = new Cart();
-        newCart.setId(cartIdGenerator.incrementAndGet());
         return cartRepository.save(newCart).getId();
     }
 }

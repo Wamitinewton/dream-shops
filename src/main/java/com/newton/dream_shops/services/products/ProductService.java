@@ -1,14 +1,14 @@
 package com.newton.dream_shops.services.products;
 
-import com.newton.dream_shops.dto.ImageResponseDto;
-import com.newton.dream_shops.dto.ProductDto;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
-import com.newton.dream_shops.models.Category;
-import com.newton.dream_shops.models.Image;
-import com.newton.dream_shops.models.Product;
-import com.newton.dream_shops.repository.CategoryRepository;
-import com.newton.dream_shops.repository.ImageRepository;
-import com.newton.dream_shops.repository.ProductRepository;
+import com.newton.dream_shops.dto.image.ImageResponseDto;
+import com.newton.dream_shops.dto.product.ProductDto;
+import com.newton.dream_shops.exception.CustomException;
+import com.newton.dream_shops.models.category.Category;
+import com.newton.dream_shops.models.image.Image;
+import com.newton.dream_shops.models.product.Product;
+import com.newton.dream_shops.repository.category.CategoryRepository;
+import com.newton.dream_shops.repository.image.ImageRepository;
+import com.newton.dream_shops.repository.product.ProductRepository;
 import com.newton.dream_shops.request.AddProductsRequest;
 import com.newton.dream_shops.request.ProductsUpdateRequest;
 import jakarta.transaction.Transactional;
@@ -61,14 +61,14 @@ public class ProductService implements IProductService {
 
     @Override
     public Product getProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
+        return productRepository.findById(id).orElseThrow(() -> new CustomException("Product Not Found"));
     }
 
     @Override
     public List<Product> getProductsByCategoryId(Long categoryId) {
 
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
+                .orElseThrow(() -> new CustomException("Category Not Found"));
         return productRepository.findByCategory(category);
 
     }
@@ -79,7 +79,7 @@ public class ProductService implements IProductService {
         return productRepository.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, productsUpdateRequest))
                 .map(productRepository::save)
-                .orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
+                .orElseThrow(() -> new CustomException("Product Not Found"));
     }
 
     private Product updateExistingProduct(Product existingProduct, ProductsUpdateRequest productsUpdateRequest) {
@@ -97,7 +97,7 @@ public class ProductService implements IProductService {
     @Transactional
     public void deleteProduct(Long id) {
         productRepository.findById(id).ifPresentOrElse(productRepository::delete, () -> {
-            throw new ResourceNotFoundException("Product Not Found");
+            throw new CustomException("Product Not Found");
         });
     }
 

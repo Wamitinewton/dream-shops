@@ -6,7 +6,7 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
-import com.newton.dream_shops.dto.FirebaseFileDto;
+import com.newton.dream_shops.dto.firebase.FirebaseFileDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
@@ -49,7 +49,8 @@ public class FirebaseStorageService {
 
     /**
      * Upload file to Firebase Storage
-     * @param file The file to upload
+     *
+     * @param file     The file to upload
      * @param fileName Optional custom file name
      * @return Object containing the download URL and storage path
      */
@@ -81,6 +82,7 @@ public class FirebaseStorageService {
 
     /**
      * Delete file from Firebase Storage
+     *
      * @param storagePath The path of the file in Firebase Storage
      * @return True if deletion was successful
      */

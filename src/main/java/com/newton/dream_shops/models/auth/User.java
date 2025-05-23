@@ -15,10 +15,6 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "users", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "username"),
-        @UniqueConstraint(columnNames = "email")
-})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -28,47 +24,29 @@ public class User  implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    @NotBlank(message = "First name is required")
-    @Size(min = 2, max = 50, message = "First name must be between 2 and 50 characters")
     private String firstName;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Last name is required")
-    @Size(min = 2, max = 50, message = "Last name must be between 2 and 50 characters")
+
     private String lastName;
 
     @Column(nullable = false, unique = true)
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
     private String username;
 
     @Column(nullable = false, unique = true)
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
     private String email;
 
-    @Column(nullable = false)
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must be at least 8 characters")
+
     private String password;
 
-    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    @Column(name = "is_account_non_expired")
     private boolean isAccountNonExpired = true;
 
-    @Column(name = "is_account_non_locked")
     private boolean isAccountNonLocked = true;
 
-    @Column(name = "is_credentials_non_expired")
     private boolean isCredentialsNonExpired = true;
 
-    @Column(name = "is_enabled")
     private boolean isEnabled = true;
 
     @PrePersist

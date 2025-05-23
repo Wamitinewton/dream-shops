@@ -1,12 +1,12 @@
 package com.newton.dream_shops.services.images;
 
-import com.newton.dream_shops.dto.FirebaseFileDto;
-import com.newton.dream_shops.dto.ImageResponseDto;
-import com.newton.dream_shops.dto.ImageUploadDto;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
-import com.newton.dream_shops.models.Image;
-import com.newton.dream_shops.models.Product;
-import com.newton.dream_shops.repository.ImageRepository;
+import com.newton.dream_shops.dto.firebase.FirebaseFileDto;
+import com.newton.dream_shops.dto.image.ImageResponseDto;
+import com.newton.dream_shops.dto.image.ImageUploadDto;
+import com.newton.dream_shops.exception.CustomException;
+import com.newton.dream_shops.models.image.Image;
+import com.newton.dream_shops.models.product.Product;
+import com.newton.dream_shops.repository.image.ImageRepository;
 import com.newton.dream_shops.services.firebase.FirebaseStorageService;
 import com.newton.dream_shops.services.products.IProductService;
 import jakarta.transaction.Transactional;
@@ -30,13 +30,13 @@ public class ImageService implements IImageService {
 
     @Override
     public Image getImageById(Long id) {
-        return imageRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Image Not Found"));
+        return imageRepository.findById(id).orElseThrow(() -> new CustomException("Image Not Found"));
     }
 
     @Override
     public void deleteImageById(Long id) {
         Image image = imageRepository.findById(id).orElseThrow(() ->
-            new ResourceNotFoundException("Image Not Found")
+                new CustomException("Image Not Found")
         );
 
         if (image.getStoragePath() != null) {

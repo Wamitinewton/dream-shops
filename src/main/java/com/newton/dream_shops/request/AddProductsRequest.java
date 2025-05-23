@@ -1,6 +1,6 @@
 package com.newton.dream_shops.request;
 
-import com.newton.dream_shops.models.Category;
+import com.newton.dream_shops.models.category.Category;
 import lombok.Data;
 
 import java.math.BigDecimal;

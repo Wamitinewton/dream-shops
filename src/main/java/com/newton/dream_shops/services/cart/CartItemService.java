@@ -1,11 +1,11 @@
 package com.newton.dream_shops.services.cart;
 
-import com.newton.dream_shops.exception.ResourceNotFoundException;
-import com.newton.dream_shops.models.Cart;
-import com.newton.dream_shops.models.CartItem;
-import com.newton.dream_shops.models.Product;
-import com.newton.dream_shops.repository.CartItemRepository;
-import com.newton.dream_shops.repository.CartRepository;
+import com.newton.dream_shops.exception.CustomException;
+import com.newton.dream_shops.models.cart.Cart;
+import com.newton.dream_shops.models.cart.CartItem;
+import com.newton.dream_shops.models.product.Product;
+import com.newton.dream_shops.repository.cart.CartItemRepository;
+import com.newton.dream_shops.repository.cart.CartRepository;
 import com.newton.dream_shops.services.products.IProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -67,7 +67,7 @@ public class CartItemService implements ICartItemService {
                 .filter(item -> item.getProduct()
                         .getId().equals(productId))
                 .findFirst()
-                .ifPresent(item ->{
+                .ifPresent(item -> {
                     item.setQuantity(quantity);
                     item.setUnitPrice(item.getProduct().getPrice());
                     item.setTotalPrice();
@@ -87,6 +87,6 @@ public class CartItemService implements ICartItemService {
                 .filter(item -> item.getProduct()
                         .getId().equals(productId))
                 .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+                .orElseThrow(() -> new CustomException("Item not found"));
     }
 }

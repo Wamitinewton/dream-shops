@@ -1,7 +1,7 @@
 package com.newton.dream_shops.services.category;
 
 import com.newton.dream_shops.exception.AlreadyExistsException;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.category.Category;
 import com.newton.dream_shops.repository.category.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ public class CategoryService implements ICategoryService {
     @Override
     public Category getCategoryById(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
+                .orElseThrow(() -> new CustomException("Category Not Found"));
     }
 
     @Override
@@ -36,7 +36,7 @@ public class CategoryService implements ICategoryService {
         return Optional.of(category).filter(c -> !categoryRepository.existsByName(c.getName()))
                 .map(categoryRepository::save)
                 .orElseThrow(() ->
-                    new AlreadyExistsException(category.getName() + " already exists"));
+                        new AlreadyExistsException(category.getName() + " already exists"));
     }
 
     @Override
@@ -45,13 +45,13 @@ public class CategoryService implements ICategoryService {
                 .map(oldCategory -> {
                     oldCategory.setName(category.getName());
                     return categoryRepository.save(oldCategory);
-                }).orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
+                }).orElseThrow(() -> new CustomException("Category Not Found"));
     }
 
     @Override
     public void deleteCategory(Long id) {
         categoryRepository.findById(id).ifPresentOrElse(categoryRepository::delete, () -> {
-            new ResourceNotFoundException("Category Not Found");
+            new CustomException("Category Not Found");
         });
     }
 }

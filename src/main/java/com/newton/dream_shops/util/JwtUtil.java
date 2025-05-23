@@ -6,7 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@Component
+@Service
 @Slf4j
 public class JwtUtil {
 
@@ -111,11 +111,6 @@ public class JwtUtil {
         return false;
     }
 
-
-
-    public Long getJwtExpirationMs() {
-        return (long) jwtExpirationMs;
-    }
 
     public Long getJwtRefreshExpirationMs() {
         return (long) jwtRefreshExpirationMs;

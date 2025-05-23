@@ -2,7 +2,7 @@ package com.newton.dream_shops.services.products;
 
 import com.newton.dream_shops.dto.image.ImageResponseDto;
 import com.newton.dream_shops.dto.product.ProductDto;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.category.Category;
 import com.newton.dream_shops.models.image.Image;
 import com.newton.dream_shops.models.product.Product;
@@ -61,14 +61,14 @@ public class ProductService implements IProductService {
 
     @Override
     public Product getProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
+        return productRepository.findById(id).orElseThrow(() -> new CustomException("Product Not Found"));
     }
 
     @Override
     public List<Product> getProductsByCategoryId(Long categoryId) {
 
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("Category Not Found"));
+                .orElseThrow(() -> new CustomException("Category Not Found"));
         return productRepository.findByCategory(category);
 
     }
@@ -79,7 +79,7 @@ public class ProductService implements IProductService {
         return productRepository.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, productsUpdateRequest))
                 .map(productRepository::save)
-                .orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
+                .orElseThrow(() -> new CustomException("Product Not Found"));
     }
 
     private Product updateExistingProduct(Product existingProduct, ProductsUpdateRequest productsUpdateRequest) {
@@ -97,7 +97,7 @@ public class ProductService implements IProductService {
     @Transactional
     public void deleteProduct(Long id) {
         productRepository.findById(id).ifPresentOrElse(productRepository::delete, () -> {
-            throw new ResourceNotFoundException("Product Not Found");
+            throw new CustomException("Product Not Found");
         });
     }
 

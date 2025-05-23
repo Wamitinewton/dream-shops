@@ -49,7 +49,8 @@ public class FirebaseStorageService {
 
     /**
      * Upload file to Firebase Storage
-     * @param file The file to upload
+     *
+     * @param file     The file to upload
      * @param fileName Optional custom file name
      * @return Object containing the download URL and storage path
      */
@@ -81,6 +82,7 @@ public class FirebaseStorageService {
 
     /**
      * Delete file from Firebase Storage
+     *
      * @param storagePath The path of the file in Firebase Storage
      * @return True if deletion was successful
      */

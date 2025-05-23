@@ -1,6 +1,6 @@
 package com.newton.dream_shops.services.cart;
 
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.cart.Cart;
 import com.newton.dream_shops.repository.cart.CartItemRepository;
 import com.newton.dream_shops.repository.cart.CartRepository;
@@ -22,7 +22,7 @@ public class CartService implements ICartService {
     @Override
     public Cart getCart(Long id) {
         Cart cart = cartRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cart Not Found"));
+                .orElseThrow(() -> new CustomException("Cart Not Found"));
 
         BigDecimal totalAmount = cart.getTotalAmount();
         cart.setTotalAmount(totalAmount);

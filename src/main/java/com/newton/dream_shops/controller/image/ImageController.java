@@ -1,7 +1,7 @@
 package com.newton.dream_shops.controller.image;
 
 import com.newton.dream_shops.dto.image.ImageResponseDto;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.image.Image;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.images.IImageService;
@@ -38,7 +38,7 @@ public class ImageController {
                 imageService.updateImage(file, imageId);
                 return ResponseEntity.ok(new ApiResponse("Successfully updated image", null));
             }
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Image not found", e.getMessage()));
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Failed to update image", null));
@@ -52,7 +52,7 @@ public class ImageController {
                 imageService.deleteImageById(imageId);
                 return ResponseEntity.ok(new ApiResponse("Successfully deleted image", null));
             }
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse("Image not found", e.getMessage()));
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiResponse("Failed to delete image", null));

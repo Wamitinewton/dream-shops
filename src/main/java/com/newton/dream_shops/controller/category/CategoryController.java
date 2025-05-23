@@ -1,7 +1,7 @@
 package com.newton.dream_shops.controller.category;
 
 import com.newton.dream_shops.exception.AlreadyExistsException;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.category.Category;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.category.ICategoryService;
@@ -45,7 +45,7 @@ public class CategoryController {
         try {
             Category category = categoryService.getCategoryById(id);
             return ResponseEntity.ok(new ApiResponse("Successfully retrieved category", category));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -55,7 +55,7 @@ public class CategoryController {
         try {
             Category category = categoryService.getCategoryByName(name);
             return ResponseEntity.ok(new ApiResponse("Successfully retrieved category", category));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -65,7 +65,7 @@ public class CategoryController {
         try {
             categoryService.deleteCategory(id);
             return ResponseEntity.ok(new ApiResponse("Successfully deleted category", null));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -73,9 +73,9 @@ public class CategoryController {
     @PutMapping("/category/{id}/update")
     public ResponseEntity<ApiResponse> updateCategoryById(@PathVariable Long id, @RequestBody Category category) {
         try {
-            Category newCategory = categoryService.updateCategory(category ,id);
+            Category newCategory = categoryService.updateCategory(category, id);
             return ResponseEntity.ok(new ApiResponse("Successfully updated category", newCategory));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }

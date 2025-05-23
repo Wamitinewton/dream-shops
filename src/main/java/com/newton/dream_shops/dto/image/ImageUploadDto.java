@@ -43,17 +43,6 @@ public class ImageUploadDto {
     }
 
     /**
-     * Converts this DTO to an Image Entity
-     * The imageUrl and storagePath will be set after Firebase upload
-     */
-    public Image toImageEntity() {
-        Image image = new Image();
-        image.setFileName(this.fileName);
-        image.setFileType(this.fileType);
-        return image;
-    }
-
-    /**
      * Convert Image entity to ImageResponseDto for client response
      */
     public static ImageResponseDto toImageDto(Image image) {
@@ -63,5 +52,16 @@ public class ImageUploadDto {
                 .fileType(image.getFileType())
                 .imageUrl(image.getImageUrl())
                 .build();
+    }
+
+    /**
+     * Converts this DTO to an Image Entity
+     * The imageUrl and storagePath will be set after Firebase upload
+     */
+    public Image toImageEntity() {
+        Image image = new Image();
+        image.setFileName(this.fileName);
+        image.setFileType(this.fileType);
+        return image;
     }
 }

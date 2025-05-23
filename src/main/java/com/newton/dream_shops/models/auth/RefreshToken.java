@@ -16,7 +16,7 @@ public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
 
     @Column(nullable = false, unique = true)
     private String token;
@@ -39,8 +39,7 @@ public class RefreshToken {
         this.createdAt = LocalDateTime.now();
     }
 
-    @PrePersist
-    protected boolean isExpired() {
+    public boolean isExpired() {
         return LocalDateTime.now().isAfter(this.expiresAt);
     }
 }

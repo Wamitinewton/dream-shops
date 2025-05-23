@@ -1,7 +1,7 @@
 package com.newton.dream_shops.controller.product;
 
 import com.newton.dream_shops.dto.product.ProductDto;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.request.AddProductsRequest;
 import com.newton.dream_shops.request.ProductsUpdateRequest;
@@ -40,7 +40,7 @@ public class ProductController {
             Product product = productService.getProductById(id);
             ProductDto productDto = productService.toProductDto(product);
             return ResponseEntity.ok(new ApiResponse("Successfully retrieved product", productDto));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -60,7 +60,7 @@ public class ProductController {
         try {
             Product updatedProduct = productService.updateProduct(product, id);
             return ResponseEntity.ok(new ApiResponse("Successfully updated product", updatedProduct));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -70,7 +70,7 @@ public class ProductController {
         try {
             productService.deleteProduct(id);
             return ResponseEntity.ok(new ApiResponse("Successfully deleted product", null));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }

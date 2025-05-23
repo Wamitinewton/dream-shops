@@ -1,6 +1,6 @@
 package com.newton.dream_shops.controller.cart;
 
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.cart.Cart;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.cart.ICartService;
@@ -23,7 +23,7 @@ public class CartController {
         try {
             Cart cart = cartService.getCart(cartId);
             return ResponseEntity.ok(new ApiResponse("Successfully get cart", cart));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -33,7 +33,7 @@ public class CartController {
         try {
             cartService.clearCart(cartId);
             return ResponseEntity.ok(new ApiResponse("Successfully cleared cart", null));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -43,7 +43,7 @@ public class CartController {
         try {
             BigDecimal totalPrice = cartService.getTotal(cartId);
             return ResponseEntity.ok(new ApiResponse("Successfully retrieved total price", totalPrice));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }

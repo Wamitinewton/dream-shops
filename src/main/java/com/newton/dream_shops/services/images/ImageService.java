@@ -3,7 +3,7 @@ package com.newton.dream_shops.services.images;
 import com.newton.dream_shops.dto.firebase.FirebaseFileDto;
 import com.newton.dream_shops.dto.image.ImageResponseDto;
 import com.newton.dream_shops.dto.image.ImageUploadDto;
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.image.Image;
 import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.repository.image.ImageRepository;
@@ -30,13 +30,13 @@ public class ImageService implements IImageService {
 
     @Override
     public Image getImageById(Long id) {
-        return imageRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Image Not Found"));
+        return imageRepository.findById(id).orElseThrow(() -> new CustomException("Image Not Found"));
     }
 
     @Override
     public void deleteImageById(Long id) {
         Image image = imageRepository.findById(id).orElseThrow(() ->
-            new ResourceNotFoundException("Image Not Found")
+                new CustomException("Image Not Found")
         );
 
         if (image.getStoragePath() != null) {

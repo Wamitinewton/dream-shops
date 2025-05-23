@@ -1,18 +1,15 @@
 package com.newton.dream_shops.dto.auth;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LoginRequest {
-
-    @NotBlank(message = "Username or email is required")
     private String usernameOrEmail;
-
-    @NotBlank(message = "Password is required")
     private String password;
 }

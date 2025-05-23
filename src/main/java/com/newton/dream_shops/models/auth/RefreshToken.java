@@ -21,10 +21,10 @@ public class RefreshToken {
     @Column(nullable = false, unique = true)
     private String token;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "revoked")

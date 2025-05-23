@@ -1,6 +1,6 @@
 package com.newton.dream_shops.controller.cart;
 
-import com.newton.dream_shops.exception.ResourceNotFoundException;
+import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.cart.ICartItemService;
 import com.newton.dream_shops.services.cart.ICartService;
@@ -28,7 +28,7 @@ public class CartItemController {
             }
             cartItemService.addItemToCart(cartId, productId, quantity);
             return ResponseEntity.ok(new ApiResponse("Successfully added item to cart", null));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -38,7 +38,7 @@ public class CartItemController {
         try {
             cartItemService.removeItemFromCart(cartId, productId);
             return ResponseEntity.ok(new ApiResponse("Successfully removed item from cart", null));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
@@ -52,7 +52,7 @@ public class CartItemController {
         try {
             cartItemService.updateItemInCart(cartId, productId, quantity);
             return ResponseEntity.ok(new ApiResponse("Successfully updated item quantity", null));
-        } catch (ResourceNotFoundException e) {
+        } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }

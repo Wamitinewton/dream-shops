@@ -45,6 +45,8 @@ public interface IAuthService {
      */
     void logoutAllDevices(Long userId);
 
+    UserInfo getUserById(Long userId);
+
     void validateSignUpRequest(SignUpRequest request);
 
     void validateLoginRequest(LoginRequest request);

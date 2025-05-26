@@ -111,6 +111,15 @@ public class AuthService implements IAuthService {
     }
 
     @Override
+    @Transactional
+    public void deleteUser(Long userId) {
+        Optional.ofNullable(userId)
+        .ifPresentOrElse(userRepository::deleteById, () -> {
+            throw new CustomException("User Not Found");
+        });
+    }
+
+    @Override
     public void validateSignUpRequest(SignUpRequest request) {
         Optional.ofNullable(request)
                 .filter(r -> StringUtils.hasText(r.getUsername()))

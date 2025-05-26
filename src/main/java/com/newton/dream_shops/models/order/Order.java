@@ -1,6 +1,8 @@
 package com.newton.dream_shops.models.order;
 
 import com.newton.dream_shops.enums.OrderStatus;
+import com.newton.dream_shops.models.auth.User;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,4 +30,8 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<OrderItem> orderItems = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

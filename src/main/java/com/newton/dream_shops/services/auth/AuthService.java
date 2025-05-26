@@ -11,6 +11,8 @@ import com.newton.dream_shops.util.JwtUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,6 +37,7 @@ public class AuthService implements IAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
+    private final ModelMapper modelMapper;
 
     @Override
     @Transactional
@@ -97,6 +100,14 @@ public class AuthService implements IAuthService {
                             throw new IllegalArgumentException("User ID cannot be null");
                         }
                 );
+    }
+
+    @Override
+    @Transactional
+    public UserInfo getUserById(Long userId) {
+        return userRepository.findById(userId)
+        .map(this :: mapToUserInfo)
+        .orElseThrow(() -> new CustomException("User with " + userId + " Not found"));
     }
 
     @Override
@@ -197,13 +208,7 @@ public class AuthService implements IAuthService {
 
     @Override
     public UserInfo mapToUserInfo(User user) {
-        return new UserInfo(
-                user.getId(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getUsername(),
-                user.getEmail()
-        );
+        return modelMapper.map(user, UserInfo.class);
     }
 
     @Override

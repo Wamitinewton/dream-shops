@@ -6,7 +6,6 @@ import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.auth.IAuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,7 +15,6 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 @RestController
 @RequestMapping("${api.prefix}/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AuthController {
 
     private final IAuthService authService;
@@ -69,25 +67,4 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/logout-all-devices")
-    public ResponseEntity<ApiResponse> logOutAllDevices(@RequestParam Long userId) {
-        try {
-            authService.logoutAllDevices(userId);
-            return ResponseEntity.ok(new ApiResponse("Logout successful", null));
-        } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(e.getMessage(), null));
-        }
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse> getUserDetailsById(@PathVariable Long userId){
-        try {
-            UserInfo userInfo = authService.getUserById(userId);
-            return ResponseEntity.ok(new ApiResponse("successfully found user details", userInfo));
-        } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(new ApiResponse(e.getMessage(), null));
-        }
-    }
 }

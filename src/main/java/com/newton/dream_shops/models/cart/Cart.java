@@ -10,6 +10,8 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.newton.dream_shops.models.auth.User;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -23,6 +25,10 @@ public class Cart {
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CartItem> cartItems = new HashSet<>();
+
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     public void addItem(CartItem item) {
         this.cartItems.add(item);

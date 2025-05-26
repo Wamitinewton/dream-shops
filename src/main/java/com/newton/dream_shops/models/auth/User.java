@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.newton.dream_shops.models.cart.Cart;
+import com.newton.dream_shops.models.order.Order;
+
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +18,6 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User implements UserDetails {
@@ -41,7 +43,15 @@ public class User implements UserDetails {
 
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Cart> cart;
+
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Order> orders;
+
     private LocalDateTime updatedAt;
+
     private boolean isAccountNonExpired = true;
 
     private boolean isAccountNonLocked = true;

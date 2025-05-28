@@ -1,15 +1,19 @@
 package com.newton.dream_shops.services.cart;
 
 import com.newton.dream_shops.exception.CustomException;
+import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.models.cart.Cart;
+import com.newton.dream_shops.repository.auth.UserRepository;
 import com.newton.dream_shops.repository.cart.CartItemRepository;
 import com.newton.dream_shops.repository.cart.CartRepository;
+import com.newton.dream_shops.util.JwtHelperService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 @RequiredArgsConstructor
@@ -17,43 +21,75 @@ public class CartService implements ICartService {
 
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
-    private final AtomicLong cartIdGenerator = new AtomicLong(0);
+    private final UserRepository userRepository;
+    private final JwtHelperService jwtHelperService;
 
     @Override
-    public Cart getCart(Long id) {
-        Cart cart = cartRepository.findById(id)
-                .orElseThrow(() -> new CustomException("Cart Not Found"));
-
-        BigDecimal totalAmount = cart.getTotalAmount();
-        cart.setTotalAmount(totalAmount);
-        return cartRepository.save(cart);
-    }
-
     @Transactional
-    @Override
-    public void clearCart(Long id) {
-        Cart cart = getCart(id);
-        cartItemRepository.deleteAllByCartId(id);
-        cart.getCartItems().clear();
-        cartRepository.deleteById(id);
-    }
-
-    @Override
-    public BigDecimal getTotal(Long id) {
-        Cart cart = getCart(id);
-        return cart.getTotalAmount();
-    }
-
-    @Override
-    public Long generateNewCartId() {
-        Cart newCart = new Cart();
-        return cartRepository.save(newCart).getId();
-    }
-
-    
-
-    @Override
     public Cart getCartByUserId(Long userId) {
         return cartRepository.findByUserId(userId);
     }
+
+    @Override
+    @Transactional
+    public Cart getOrCreateCartForUser(Long userId) {
+        Cart exisitingCart = getCartByUserId(userId);
+        if (exisitingCart != null) {
+            return exisitingCart;
+        }
+
+        User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException("User not found"));
+
+        Cart newCart = new Cart();
+        newCart.setUser(user);
+        return cartRepository.save(newCart);
+    }
+
+    @Override
+    @Transactional
+    public Cart getOrCreateCartForCurrentUser(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
+        if (userId == null) {
+            throw new CustomException("User authentication required");
+        }
+        return getOrCreateCartForUser(userId);
+    }
+
+    @Override
+    @Transactional
+    public void clearCartForUser(Long userId) {
+        Cart cart = getCartByUserId(userId);
+        if (cart != null) {
+            cartItemRepository.deleteAllByCartId(cart.getId());
+            cart.getCartItems().clear();
+            cart.setTotalAmount(BigDecimal.ZERO);
+            cartRepository.save(cart);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void clearCartForCurrentUser(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
+        if (userId == null) {
+            throw new CustomException("User Authentication required");
+        }
+        clearCartForCurrentUser(request);
+        }
+
+    @Override
+    public BigDecimal getTotalForUser(Long userId) {
+        Cart cart = getCartByUserId(userId);
+        return cart != null ? cart.getTotalAmount() : BigDecimal.ZERO;
+        }
+
+    @Override
+    public BigDecimal getTotalForCurrentUser(HttpServletRequest request) {
+        Long userId =jwtHelperService.getCurrentUserIdFromRequest(request);
+        if (userId == null) {
+            throw new CustomException("User authentication required");
+        }
+        return getTotalForUser(userId);
+        }
 }

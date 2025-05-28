@@ -1,4 +1,4 @@
-package com.newton.dream_shops.request;
+package com.newton.dream_shops.dto.product;
 
 import com.newton.dream_shops.models.category.Category;
 import lombok.Data;

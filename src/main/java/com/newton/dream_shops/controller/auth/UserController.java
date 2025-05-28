@@ -4,6 +4,8 @@ import com.newton.dream_shops.dto.auth.UserInfo;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.auth.IAuthService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +18,10 @@ public class UserController {
 
     private final IAuthService authService;
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<ApiResponse> getUserDetailsById(@PathVariable Long userId) {
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse> getUserDetailsById(HttpServletRequest request) {
         try {            
-            UserInfo userInfo = authService.getUserById(userId);
+            UserInfo userInfo = authService.getUserById(request);
             return ResponseEntity.ok(new ApiResponse("Successfully found user details", userInfo));
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -27,11 +29,10 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/delete-user/{userId}")
-    public ResponseEntity<ApiResponse> deleteUserByUserId(@PathVariable Long userId) {
+    @DeleteMapping("/delete-user/delete")
+    public ResponseEntity<ApiResponse> deleteUserByUserId(HttpServletRequest request) {
         try {
-            
-            authService.deleteUser(userId);
+            authService.deleteUser(request);
             return ResponseEntity.ok(new ApiResponse("Successfully deleted account", null));
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -40,10 +41,10 @@ public class UserController {
     }
 
     @PostMapping("/logout-all-devices")
-    public ResponseEntity<ApiResponse> logOutAllDevices(@RequestParam Long userId) {
+    public ResponseEntity<ApiResponse> logOutAllDevices(HttpServletRequest request) {
         try {
             
-            authService.logoutAllDevices(userId);
+            authService.logoutAllDevices(request);
             return ResponseEntity.ok(new ApiResponse("Logout successful", null));
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -3,6 +3,9 @@ package com.newton.dream_shops.services.auth;
 import com.newton.dream_shops.dto.auth.*;
 import com.newton.dream_shops.models.auth.RefreshToken;
 import com.newton.dream_shops.models.auth.User;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.security.core.Authentication;
 
 public interface IAuthService {
@@ -43,10 +46,10 @@ public interface IAuthService {
      *
      * @param userId the user ID
      */
-    void logoutAllDevices(Long userId);
+    void logoutAllDevices(HttpServletRequest request);
 
-    UserInfo getUserById(Long userId);
-    void deleteUser(Long userId);
+    UserInfo getUserById(HttpServletRequest request);
+    void deleteUser(HttpServletRequest request);
 
     void validateSignUpRequest(SignUpRequest request);
 
@@ -74,5 +77,5 @@ public interface IAuthService {
 
     void cleanUpExpiredTokens();
 
-    void limitActiveTokensPerUser(Long userId);
+    void limitActiveTokensPerUser(HttpServletRequest request);
 }

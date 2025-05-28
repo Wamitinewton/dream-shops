@@ -1,10 +1,10 @@
 package com.newton.dream_shops.controller.product;
 
+import com.newton.dream_shops.dto.product.AddProductsRequest;
 import com.newton.dream_shops.dto.product.ProductDto;
+import com.newton.dream_shops.dto.product.ProductsUpdateRequest;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.product.Product;
-import com.newton.dream_shops.request.AddProductsRequest;
-import com.newton.dream_shops.request.ProductsUpdateRequest;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.products.IProductService;
 import lombok.AllArgsConstructor;
@@ -20,7 +20,6 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 @RestController
 @RequestMapping("/${api.prefix}/products")
 public class ProductController {
-
     private final IProductService productService;
 
     @GetMapping("/all")
@@ -162,7 +161,7 @@ public class ProductController {
             List<ProductDto> convertedProducts = productService.getConvertedProducts(products);
             if (products.isEmpty()) {
                 return ResponseEntity.status(NOT_FOUND).body(new ApiResponse("Product not found", null));
-            }
+            }   
             return ResponseEntity.ok(new ApiResponse("Successfully retrieved products", convertedProducts));
         } catch (Exception e) {
             return ResponseEntity.status(INTERNAL_SERVER_ERROR).body(new ApiResponse(e.getMessage(), null));

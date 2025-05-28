@@ -1,9 +1,9 @@
 package com.newton.dream_shops.services.products;
 
+import com.newton.dream_shops.dto.product.AddProductsRequest;
 import com.newton.dream_shops.dto.product.ProductDto;
+import com.newton.dream_shops.dto.product.ProductsUpdateRequest;
 import com.newton.dream_shops.models.product.Product;
-import com.newton.dream_shops.request.AddProductsRequest;
-import com.newton.dream_shops.request.ProductsUpdateRequest;
 
 import java.util.List;
 

@@ -11,6 +11,8 @@ public interface ICategoryService {
 
     List<Category> getAllCategories();
 
+    List<Category> searchCategories(String searchTerm);
+
     Category addCategory(Category category);
 
     Category updateCategory(Category category, Long id);

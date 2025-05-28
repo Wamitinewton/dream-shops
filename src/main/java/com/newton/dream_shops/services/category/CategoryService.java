@@ -54,4 +54,12 @@ public class CategoryService implements ICategoryService {
             new CustomException("Category Not Found");
         });
     }
+
+    @Override
+    public List<Category> searchCategories(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
+            return getAllCategories();
+        }
+        return categoryRepository.searchByName(searchTerm.trim());
+    }
 }

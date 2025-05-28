@@ -34,12 +34,20 @@ public class JwtUtil {
 
     public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
+        
+        if (userDetails instanceof com.newton.dream_shops.models.auth.User) {
+            com.newton.dream_shops.models.auth.User user = 
+                (com.newton.dream_shops.models.auth.User) userDetails;
+            claims.put("userId", user.getId());
+            claims.put("email", user.getEmail());
+        }
+        
         return createToken(claims, userDetails.getUsername(), jwtExpirationMs);
     }
 
     public String generateRefreshToken(String username) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("username", username);
+        claims.put("type", "refresh");
         return createToken(claims, username, jwtRefreshExpirationMs);
     }
 
@@ -57,6 +65,22 @@ public class JwtUtil {
 
     public String getUsernameFromToken(String token) {
         return getClaimsFromToken(token, Claims::getSubject);
+    }
+
+    public Long getUserIdFromToken(String token) {
+        return getClaimsFromToken(token, claims -> {
+            Object userId = claims.get("userId");
+            if (userId instanceof Integer) {
+                return ((Integer) userId).longValue();
+            } else if (userId instanceof Long) {
+                return (Long) userId;
+            }
+            return null;
+        });
+    }
+
+    public String getEmailFromToken(String token) {
+        return getClaimsFromToken(token, claims -> (String) claims.get("email"));
     }
 
     public Date getExpirationDateFromToken(String token) {
@@ -110,7 +134,6 @@ public class JwtUtil {
         }
         return false;
     }
-
 
     public Long getJwtRefreshExpirationMs() {
         return (long) jwtRefreshExpirationMs;

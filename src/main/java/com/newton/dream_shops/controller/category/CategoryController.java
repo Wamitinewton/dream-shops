@@ -30,7 +30,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping("/add")
+    @PostMapping("/add")
     public ResponseEntity<ApiResponse> addCategory(@RequestBody Category category) {
         try {
             Category newCategory = categoryService.addCategory(category);
@@ -40,7 +40,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping("/category/{id}")
+    @GetMapping("/category/id/{id}")
     public ResponseEntity<ApiResponse> getCategoryById(@PathVariable Long id) {
         try {
             Category category = categoryService.getCategoryById(id);
@@ -50,7 +50,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping("/category/{name}")
+    @GetMapping("/category/name/{name}")
     public ResponseEntity<ApiResponse> getCategoryByName(@PathVariable String name) {
         try {
             Category category = categoryService.getCategoryByName(name);
@@ -77,6 +77,20 @@ public class CategoryController {
             return ResponseEntity.ok(new ApiResponse("Successfully updated category", newCategory));
         } catch (CustomException e) {
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse> searchCategories(@RequestParam("q") String searchTerm){
+        try {
+            List<Category> categories = categoryService.searchCategories(searchTerm);
+            String message = categories.isEmpty() ?
+            "No categories found Matching: " + searchTerm :
+            "Found " + categories.size() + " categories";
+            return ResponseEntity.ok(new ApiResponse(message, categories));
+        } catch (Exception e) {
+           return ResponseEntity.status(INTERNAL_SERVER_ERROR)
+           .body(new ApiResponse("Search error" +e.getMessage(), null));
         }
     }
 }

@@ -7,7 +7,10 @@ import com.newton.dream_shops.models.auth.RefreshToken;
 import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.RefreshTokenRepository;
 import com.newton.dream_shops.repository.auth.UserRepository;
+import com.newton.dream_shops.util.JwtHelperService;
 import com.newton.dream_shops.util.JwtUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +41,7 @@ public class AuthService implements IAuthService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
+    private final JwtHelperService jwtHelperService;
 
     @Override
     @Transactional
@@ -92,7 +96,8 @@ public class AuthService implements IAuthService {
 
     @Override
     @Transactional
-    public void logoutAllDevices(Long userId) {
+    public void logoutAllDevices(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
         Optional.ofNullable(userId)
                 .ifPresentOrElse(
                         refreshTokenRepository::revokeAllTokensByUser,
@@ -104,7 +109,8 @@ public class AuthService implements IAuthService {
 
     @Override
     @Transactional
-    public UserInfo getUserById(Long userId) {
+    public UserInfo getUserById(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
         return userRepository.findById(userId)
         .map(this :: mapToUserInfo)
         .orElseThrow(() -> new CustomException("User with " + userId + " Not found"));
@@ -112,7 +118,9 @@ public class AuthService implements IAuthService {
 
     @Override
     @Transactional
-    public void deleteUser(Long userId) {
+    public void deleteUser(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
+        logoutAllDevices(request);
         Optional.ofNullable(userId)
         .ifPresentOrElse(userRepository::deleteById, () -> {
             throw new CustomException("User Not Found");
@@ -247,8 +255,7 @@ public class AuthService implements IAuthService {
         }
     }
 
-    @Override
-    public void limitActiveTokensPerUser(Long userId) {
+     public void limitActiveTokensPerUser(Long userId) {
         try {
             int activeTokenCount = refreshTokenRepository.countActiveTokensByUser(userId, LocalDateTime.now());
             if (activeTokenCount >= MAX_REFRESH_TOKEN_COUNT) {
@@ -257,5 +264,12 @@ public class AuthService implements IAuthService {
         } catch (Exception e) {
             log.error("Error limiting active tokens for user {}: {}", userId, e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional
+    public void limitActiveTokensPerUser(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
+        limitActiveTokensPerUser(userId); 
     }
 }

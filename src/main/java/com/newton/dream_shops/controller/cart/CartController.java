@@ -4,6 +4,8 @@ import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.cart.Cart;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.cart.ICartService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @RequiredArgsConstructor
 @RestController
@@ -18,33 +21,57 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class CartController {
     private final ICartService cartService;
 
-    @GetMapping("/{cartId}/my-cart")
-    public ResponseEntity<ApiResponse> getCart(@PathVariable Long cartId) {
+    @GetMapping("/my-cart")
+    public ResponseEntity<ApiResponse> getCart(HttpServletRequest request) {
         try {
-            Cart cart = cartService.getCart(cartId);
-            return ResponseEntity.ok(new ApiResponse("Successfully get cart", cart));
+            Cart cart = cartService.getOrCreateCartForCurrentUser(request);
+            return ResponseEntity.ok(new ApiResponse("Successfully got cart", cart));
         } catch (CustomException e) {
+            if (e.getMessage().contains("authentication")) {
+                return ResponseEntity.status(UNAUTHORIZED).body(new ApiResponse(e.getMessage(), null));
+            }
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
 
-    @DeleteMapping("/{cartId}/clear-cart")
-    public ResponseEntity<ApiResponse> clearCart(@PathVariable Long cartId) {
+    @DeleteMapping("/clear")
+    public ResponseEntity<ApiResponse> clearMyCart(HttpServletRequest request) {
         try {
-            cartService.clearCart(cartId);
+            cartService.clearCartForCurrentUser(request);
             return ResponseEntity.ok(new ApiResponse("Successfully cleared cart", null));
         } catch (CustomException e) {
+            if (e.getMessage().contains("authentication")) {
+                return ResponseEntity.status(UNAUTHORIZED).body(new ApiResponse(e.getMessage(), null));
+            }
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
 
-    @GetMapping("/{cartId}/cart/total-price")
-    public ResponseEntity<ApiResponse> getTotalAmount(@PathVariable Long cartId) {
+    @GetMapping("/total")
+    public ResponseEntity<ApiResponse> getMyCartTotal(HttpServletRequest request) {
         try {
-            BigDecimal totalPrice = cartService.getTotal(cartId);
+            BigDecimal totalPrice = cartService.getTotalForCurrentUser(request);
             return ResponseEntity.ok(new ApiResponse("Successfully retrieved total price", totalPrice));
         } catch (CustomException e) {
+            if (e.getMessage().contains("authentication")) {
+                return ResponseEntity.status(UNAUTHORIZED).body(new ApiResponse(e.getMessage(), null));
+            }
             return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
         }
     }
+
+    @GetMapping("/items-count")
+    public ResponseEntity<ApiResponse> getMyCartItemsCount(HttpServletRequest request) {
+        try {
+            Cart cart = cartService.getOrCreateCartForCurrentUser(request);
+            int itemsCount = cart.getCartItems() != null ? cart.getCartItems().size() : 0;
+            return ResponseEntity.ok(new ApiResponse("Successfully retrieved items count", itemsCount));
+        } catch (CustomException e) {
+            if (e.getMessage().contains("authentication")) {
+                return ResponseEntity.status(UNAUTHORIZED).body(new ApiResponse(e.getMessage(), null));
+            }
+            return ResponseEntity.status(NOT_FOUND).body(new ApiResponse(e.getMessage(), null));
+        }
+    }
+
 }

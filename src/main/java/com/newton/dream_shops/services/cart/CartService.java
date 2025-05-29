@@ -75,7 +75,7 @@ public class CartService implements ICartService {
         if (userId == null) {
             throw new CustomException("User Authentication required");
         }
-        clearCartForCurrentUser(request);
+        clearCartForUser(userId);
         }
 
     @Override

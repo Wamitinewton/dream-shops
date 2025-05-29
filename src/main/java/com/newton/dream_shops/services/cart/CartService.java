@@ -62,9 +62,11 @@ public class CartService implements ICartService {
         Cart cart = getCartByUserId(userId);
         if (cart != null) {
             cartItemRepository.deleteAllByCartId(cart.getId());
-            cart.getCartItems().clear();
-            cart.setTotalAmount(BigDecimal.ZERO);
-            cartRepository.save(cart);
+            Cart refreshedCart = cartRepository.findById(cart.getId())
+                    .orElseThrow(() -> new CustomException("Cart not found"));
+            refreshedCart.getCartItems().clear();
+            refreshedCart.setTotalAmount(BigDecimal.ZERO);
+            cartRepository.save(refreshedCart);
         }
     }
 

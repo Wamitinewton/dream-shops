@@ -1,6 +1,7 @@
 package com.newton.dream_shops.services.auth;
 
 import com.newton.dream_shops.dto.auth.*;
+import com.newton.dream_shops.dto.cart.CartDto;
 import com.newton.dream_shops.exception.AlreadyExistsException;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.auth.RefreshToken;
@@ -227,6 +228,7 @@ public class AuthService implements IAuthService {
     public UserInfo mapToUserInfo(User user) {
         return modelMapper.map(user, UserInfo.class);
     }
+
 
     @Override
     public String generateRefreshToken(User user) {

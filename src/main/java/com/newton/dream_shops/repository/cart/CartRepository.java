@@ -13,13 +13,4 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
      @Query("SELECT c FROM Cart c WHERE c.user.id = :userId")
     Cart findByUserId(@Param("userId") Long userId);
 
-    
-    @Query("SELECT COUNT(c) > 0 FROM Cart c WHERE c.user.id = :userId")
-    boolean existsByUserId(@Param("userId") Long userId);
-    
-    @Query("SELECT c FROM Cart c LEFT JOIN FETCH c.cartItems WHERE c.user.id = :userId")
-    Optional<Cart> findByUserIdWithItems(@Param("userId") Long userId);
-    
-    @Query("DELETE FROM Cart c WHERE c.user.id = :userId")
-    void deleteByUserId(@Param("userId") Long userId);
 }

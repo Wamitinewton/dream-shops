@@ -2,12 +2,15 @@ package com.newton.dream_shops.services.auth;
 
 import com.newton.dream_shops.dto.auth.*;
 import com.newton.dream_shops.dto.cart.CartDto;
+import com.newton.dream_shops.dto.cart.CartItemDto;
 import com.newton.dream_shops.exception.AlreadyExistsException;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.auth.RefreshToken;
 import com.newton.dream_shops.models.auth.User;
+import com.newton.dream_shops.models.cart.Cart;
 import com.newton.dream_shops.repository.auth.RefreshTokenRepository;
 import com.newton.dream_shops.repository.auth.UserRepository;
+import com.newton.dream_shops.services.cart.ICartService;
 import com.newton.dream_shops.util.JwtHelperService;
 import com.newton.dream_shops.util.JwtUtil;
 
@@ -28,7 +31,9 @@ import org.springframework.util.StringUtils;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +48,7 @@ public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
     private final JwtHelperService jwtHelperService;
+    private final ICartService cartService;
 
     @Override
     @Transactional
@@ -198,7 +204,18 @@ public class AuthService implements IAuthService {
     public JwtResponse createJwtResponse(User user) {
         String accessToken = jwtUtil.generateAccessToken(user);
         String refreshToken = generateRefreshToken(user);
-        UserInfo userInfo = mapToUserInfo(user);
+
+        UserInfo userInfo = modelMapper.map(user, UserInfo.class);
+
+        try {
+            Cart userCart = cartService.getCartByUserId(user.getId());
+            if (userCart != null) {
+                CartDto cartDto = mapToCartDto(userCart);
+                userInfo.setCart(cartDto);
+            }
+        } catch (Exception e) {
+
+        }
 
         return new JwtResponse(accessToken, refreshToken, userInfo);
     }
@@ -226,9 +243,39 @@ public class AuthService implements IAuthService {
 
     @Override
     public UserInfo mapToUserInfo(User user) {
-        return modelMapper.map(user, UserInfo.class);
+        UserInfo userInfo = modelMapper.map(user, UserInfo.class);
+
+        if (userInfo.getCart() == null) {
+            try {
+                Cart userCart = cartService.getCartByUserId(user.getId());
+                if (userCart != null) {
+                    CartDto cartDto = mapToCartDto(userCart);
+                    userInfo.setCart(cartDto);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load cart for user {}: {}", user.getId(), e.getMessage());
+            }
+        }
+
+        return userInfo;
     }
 
+    private CartDto mapToCartDto(Cart cart) {
+        if (cart == null) {
+            return null;
+        }
+
+        CartDto cartDto = new CartDto();
+        cartDto.setCartId(cart.getId());
+        cartDto.setTotalAmount(cart.getTotalAmount());
+
+        Set<CartItemDto> itemDtos = cart.getCartItems().stream()
+                .map(item -> modelMapper.map(item, CartItemDto.class))
+                .collect(Collectors.toSet());
+        cartDto.setItems(itemDtos);
+
+        return cartDto;
+    }
 
     @Override
     public String generateRefreshToken(User user) {

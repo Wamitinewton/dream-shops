@@ -43,25 +43,24 @@ public class OrderService implements IOrderService {
         if (userId == null) {
             throw new CustomException("User authentication required");
         }
-        
+
         log.info("Placing order for user: {}", userId);
-        
+
         Cart cart = cartService.getCartByUserId(userId);
         validateCartForOrder(cart);
-        
+
         validateInventoryAvailability(cart);
-        
+
         Order order = createOrder(cart);
-        
+
         List<OrderItem> orderItemsList = createOrderItems(order, cart);
         order.setOrderItems(new HashSet<>(orderItemsList));
         order.setTotalPrice(calculateTotalAmount(orderItemsList));
-        
+
         Order savedOrder = orderRepository.save(order);
-        
+
         cartService.clearCartForUser(userId);
-        
-        log.info("Order placed successfully with ID: {}", savedOrder.getId());
+
         return savedOrder;
     }
 
@@ -71,24 +70,22 @@ public class OrderService implements IOrderService {
         if (userId == null) {
             throw new CustomException("User ID cannot be null");
         }
-        
-        log.info("Placing order for user: {}", userId);
-        
-        Cart cart = cartService.getCartByUserId(userId);
+
+        Cart cart = cartService.getOrCreateCartForUser(userId);
         validateCartForOrder(cart);
-        
+
         validateInventoryAvailability(cart);
-        
+
         Order order = createOrder(cart);
-        
+
         List<OrderItem> orderItemsList = createOrderItems(order, cart);
         order.setOrderItems(new HashSet<>(orderItemsList));
         order.setTotalPrice(calculateTotalAmount(orderItemsList));
-        
+
         Order savedOrder = orderRepository.save(order);
-        
+
         cartService.clearCartForUser(userId);
-        
+
         log.info("Order placed successfully with ID: {}", savedOrder.getId());
         return savedOrder;
     }
@@ -97,11 +94,11 @@ public class OrderService implements IOrderService {
         if (cart == null) {
             throw new CustomException("No cart found for user");
         }
-        
+
         if (cart.getCartItems() == null || cart.getCartItems().isEmpty()) {
             throw new CustomException("Cannot place order with empty cart");
         }
-        
+
         if (cart.getTotalAmount() == null || cart.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new CustomException("Invalid cart total amount");
         }
@@ -113,14 +110,14 @@ public class OrderService implements IOrderService {
             if (product == null) {
                 throw new CustomException("Invalid product in cart");
             }
-            
+
             if (product.getInventory() < cartItem.getQuantity()) {
                 throw new CustomException(
-                    String.format("Insufficient inventory for product '%s'. Available: %d, Requested: %d", 
+                    String.format("Insufficient inventory for product '%s'. Available: %d, Requested: %d",
                         product.getName(), product.getInventory(), cartItem.getQuantity())
                 );
             }
-            
+
             if (cartItem.getQuantity() <= 0) {
                 throw new CustomException("Invalid quantity in cart item");
             }
@@ -138,14 +135,10 @@ public class OrderService implements IOrderService {
     private List<OrderItem> createOrderItems(Order order, Cart cart) {
         return cart.getCartItems().stream().map(cartItem -> {
             Product product = cartItem.getProduct();
-            
+
             int newInventory = product.getInventory() - cartItem.getQuantity();
             product.setInventory(newInventory);
             productRepository.save(product);
-            
-            log.debug("Updated inventory for product '{}': {} -> {}", 
-                product.getName(), product.getInventory() + cartItem.getQuantity(), newInventory);
-            
             return new OrderItem(
                     order,
                     product,
@@ -168,19 +161,19 @@ public class OrderService implements IOrderService {
     public Order updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomException("Order not found"));
-        
+
         validateStatusTransition(order.getOrderStatus(), newStatus);
-        
+
         OrderStatus oldStatus = order.getOrderStatus();
         order.setOrderStatus(newStatus);
-        
+
         if (newStatus == OrderStatus.CANCELLED && oldStatus != OrderStatus.CANCELLED) {
             restoreInventoryForCancelledOrder(order);
         }
-        
+
         Order savedOrder = orderRepository.save(order);
         log.info("Order {} status updated from {} to {}", orderId, oldStatus, newStatus);
-        
+
         return savedOrder;
     }
 
@@ -189,10 +182,9 @@ public class OrderService implements IOrderService {
             case PENDING -> newStatus == OrderStatus.PROCESSING || newStatus == OrderStatus.CANCELLED;
             case PROCESSING -> newStatus == OrderStatus.SHIPPED || newStatus == OrderStatus.CANCELLED;
             case SHIPPED -> newStatus == OrderStatus.DELIVERED;
-            case DELIVERED -> false;
-            case CANCELLED -> false;
+            case DELIVERED, CANCELLED -> false;
         };
-        
+
         if (!isValidTransition) {
             throw new CustomException(
                 String.format("Invalid status transition from %s to %s", currentStatus, newStatus)
@@ -206,8 +198,8 @@ public class OrderService implements IOrderService {
             int restoredInventory = product.getInventory() + orderItem.getQuantity();
             product.setInventory(restoredInventory);
             productRepository.save(product);
-            
-            log.info("Restored inventory for product '{}': +{} (total: {})", 
+
+            log.info("Restored inventory for product '{}': +{} (total: {})",
                 product.getName(), orderItem.getQuantity(), restoredInventory);
         }
     }
@@ -233,7 +225,7 @@ public class OrderService implements IOrderService {
         if (userId == null) {
             throw new CustomException("User ID cannot be null");
         }
-        
+
         List<Order> orders = orderRepository.findByUserId(userId);
         return orders.stream()
                 .map(this::convertToDto)

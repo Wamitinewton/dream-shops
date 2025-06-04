@@ -1,4 +1,4 @@
-package com.newton.dream_shops.security;
+package com.newton.dream_shops.security.jwt;
 
 import com.newton.dream_shops.services.auth.UserDetailsServiceImpl;
 import com.newton.dream_shops.util.JwtUtil;

@@ -1,4 +1,4 @@
-package com.newton.dream_shops.security;
+package com.newton.dream_shops.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;

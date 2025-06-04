@@ -1,6 +1,23 @@
 package com.newton.dream_shops.services.auth;
 
-import com.newton.dream_shops.dto.auth.*;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import com.newton.dream_shops.dto.auth.JwtResponse;
+import com.newton.dream_shops.dto.auth.LoginRequest;
+import com.newton.dream_shops.dto.auth.RefreshTokenRequest;
+import com.newton.dream_shops.dto.auth.SignUpRequest;
+import com.newton.dream_shops.dto.auth.UserInfo;
 import com.newton.dream_shops.dto.cart.CartDto;
 import com.newton.dream_shops.dto.cart.CartItemDto;
 import com.newton.dream_shops.exception.AlreadyExistsException;
@@ -12,39 +29,20 @@ import com.newton.dream_shops.repository.auth.RefreshTokenRepository;
 import com.newton.dream_shops.repository.auth.UserRepository;
 import com.newton.dream_shops.services.cart.ICartService;
 import com.newton.dream_shops.util.JwtHelperService;
-import com.newton.dream_shops.util.JwtUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService implements IAuthService {
 
-    private static final int MAX_REFRESH_TOKEN_COUNT = 5;
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
     private final JwtHelperService jwtHelperService;
@@ -68,13 +66,12 @@ public class AuthService implements IAuthService {
     @Transactional
     public JwtResponse login(LoginRequest loginRequest) {
         validateLoginRequest(loginRequest);
-
         return Optional.of(loginRequest)
                 .map(this::authenticateUser)
                 .map(auth -> (User) auth.getPrincipal())
                 .map(user -> {
-                    cleanUpExpiredTokens();
-                    limitActiveTokensPerUser(user.getId());
+                    jwtHelperService.cleanUpExpiredTokens();
+                    jwtHelperService.limitActiveTokensPerUser(user.getId());
                     return createJwtResponse(user);
                 })
                 .orElseThrow(() -> new CustomException("Authentication failed"));
@@ -85,9 +82,7 @@ public class AuthService implements IAuthService {
     public JwtResponse refreshToken(RefreshTokenRequest refreshTokenRequest) {
         validateRefreshTokenRequest(refreshTokenRequest);
 
-        return Optional.of(refreshTokenRequest.getRefreshToken())
-                .flatMap(token -> refreshTokenRepository.findByTokenAndRevokedFalse(token))
-                .filter(token -> !token.isExpired())
+        return jwtHelperService.findValidRefreshToken(refreshTokenRequest.getRefreshToken())
                 .map(this::rotateAndCreateResponse)
                 .orElseThrow(() -> new CustomException("Invalid or expired refresh token"));
     }
@@ -95,23 +90,15 @@ public class AuthService implements IAuthService {
     @Override
     @Transactional
     public void logout(String refreshToken) {
-        Optional.ofNullable(refreshToken)
-                .filter(StringUtils::hasText)
-                .flatMap(refreshTokenRepository::findByToken)
-                .ifPresent(this::revokeToken);
+        if (StringUtils.hasText(refreshToken)) {
+            jwtHelperService.performLogout(refreshToken);
+        }
     }
 
     @Override
     @Transactional
     public void logoutAllDevices(HttpServletRequest request) {
-        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
-        Optional.ofNullable(userId)
-                .ifPresentOrElse(
-                        refreshTokenRepository::revokeAllTokensByUser,
-                        () -> {
-                            throw new IllegalArgumentException("User ID cannot be null");
-                        }
-                );
+        jwtHelperService.performLogoutAllDevices(request);
     }
 
     @Override
@@ -119,8 +106,8 @@ public class AuthService implements IAuthService {
     public UserInfo getUserById(HttpServletRequest request) {
         Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
         return userRepository.findById(userId)
-        .map(this :: mapToUserInfo)
-        .orElseThrow(() -> new CustomException("User with " + userId + " Not found"));
+                .map(this::mapToUserInfo)
+                .orElseThrow(() -> new CustomException("User with " + userId + " Not found"));
     }
 
     @Override
@@ -129,9 +116,9 @@ public class AuthService implements IAuthService {
         Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
         logoutAllDevices(request);
         Optional.ofNullable(userId)
-        .ifPresentOrElse(userRepository::deleteById, () -> {
-            throw new CustomException("User Not Found");
-        });
+                .ifPresentOrElse(userRepository::deleteById, () -> {
+                    throw new CustomException("User Not Found");
+                });
     }
 
     @Override
@@ -192,9 +179,7 @@ public class AuthService implements IAuthService {
             return authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.getUsernameOrEmail(),
-                            request.getPassword()
-                    )
-            );
+                            request.getPassword()));
         } catch (CustomException e) {
             throw new CustomException(e.getMessage());
         }
@@ -202,20 +187,11 @@ public class AuthService implements IAuthService {
 
     @Override
     public JwtResponse createJwtResponse(User user) {
-        String accessToken = jwtUtil.generateAccessToken(user);
-        String refreshToken = generateRefreshToken(user);
+        String[] tokens = jwtHelperService.generateTokenPair(user);
+        String accessToken = tokens[0];
+        String refreshToken = tokens[1];
 
-        UserInfo userInfo = modelMapper.map(user, UserInfo.class);
-
-        try {
-            Cart userCart = cartService.getCartByUserId(user.getId());
-            if (userCart != null) {
-                CartDto cartDto = mapToCartDto(userCart);
-                userInfo.setCart(cartDto);
-            }
-        } catch (Exception e) {
-
-        }
+        UserInfo userInfo = mapToUserInfo(user);
 
         return new JwtResponse(accessToken, refreshToken, userInfo);
     }
@@ -228,8 +204,12 @@ public class AuthService implements IAuthService {
         }
 
         User user = refreshToken.getUser();
-        String accessToken = jwtUtil.generateAccessToken(user);
-        String newRefreshToken = rotateRefreshToken(refreshToken);
+
+        // Use JwtHelperService to refresh token pair with rotation
+        String[] tokens = jwtHelperService.refreshTokenPair(refreshToken.getToken());
+        String accessToken = tokens[0];
+        String newRefreshToken = tokens[1];
+
         UserInfo userInfo = mapToUserInfo(user);
 
         return new JwtResponse(accessToken, newRefreshToken, userInfo);
@@ -237,8 +217,7 @@ public class AuthService implements IAuthService {
 
     @Override
     public void revokeToken(RefreshToken refreshToken) {
-        refreshToken.setRevoked(true);
-        refreshTokenRepository.save(refreshToken);
+        jwtHelperService.revokeRefreshToken(refreshToken);
     }
 
     @Override
@@ -279,46 +258,26 @@ public class AuthService implements IAuthService {
 
     @Override
     public String generateRefreshToken(User user) {
-        String tokenValue = UUID.randomUUID().toString();
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(tokenValue);
-        refreshToken.setUser(user);
-        refreshToken.setExpiresAt(LocalDateTime.now().plus(Duration.ofMillis(jwtUtil.getJwtRefreshExpirationMs())));
-        refreshTokenRepository.save(refreshToken);
-        return tokenValue;
+        return jwtHelperService.generateRefreshToken(user);
     }
 
     @Override
     public String rotateRefreshToken(RefreshToken oldRefreshToken) {
-        oldRefreshToken.setRevoked(true);
-        refreshTokenRepository.save(oldRefreshToken);
-        return generateRefreshToken(oldRefreshToken.getUser());
+        return jwtHelperService.rotateRefreshToken(oldRefreshToken);
     }
 
     @Override
     public void cleanUpExpiredTokens() {
-        try {
-            refreshTokenRepository.deleteExpiredTokens(LocalDateTime.now());
-        } catch (Exception e) {
-            log.error("Error cleaning up expired tokens: {}", e.getMessage());
-        }
+        jwtHelperService.cleanUpExpiredTokens();
     }
 
-     public void limitActiveTokensPerUser(Long userId) {
-        try {
-            int activeTokenCount = refreshTokenRepository.countActiveTokensByUser(userId, LocalDateTime.now());
-            if (activeTokenCount >= MAX_REFRESH_TOKEN_COUNT) {
-                refreshTokenRepository.revokeAllTokensByUser(userId);
-            }
-        } catch (Exception e) {
-            log.error("Error limiting active tokens for user {}: {}", userId, e.getMessage());
-        }
+    public void limitActiveTokensPerUser(Long userId) {
+        jwtHelperService.limitActiveTokensPerUser(userId);
     }
 
     @Override
     @Transactional
     public void limitActiveTokensPerUser(HttpServletRequest request) {
-        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
-        limitActiveTokensPerUser(userId); 
+        jwtHelperService.limitActiveTokensForCurrentUser(request);
     }
 }

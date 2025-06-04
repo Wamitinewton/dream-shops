@@ -5,6 +5,7 @@ import com.newton.dream_shops.security.jwt.JwtAuthenticationFilter;
 import com.newton.dream_shops.security.oauth.OAuth2AuthenticationFailureHandler;
 import com.newton.dream_shops.security.oauth.OAuth2AuthenticationSuccessHandler;
 import com.newton.dream_shops.services.auth.CustomOAuth2UserService;
+import com.newton.dream_shops.services.auth.CustomOidcUserService;
 import com.newton.dream_shops.services.auth.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -36,6 +37,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOidcUserService customOidcUserService;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
@@ -74,7 +76,8 @@ public class SecurityConfig {
                         .redirectionEndpoint(redirection -> redirection
                                 .baseUri("/api/v1/auth/oauth2/callback/*"))
                         .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService))
+                                .userService(customOAuth2UserService)
+                                .oidcUserService(customOidcUserService))
                         .successHandler(oAuth2AuthenticationSuccessHandler)
                         .failureHandler(oAuth2AuthenticationFailureHandler));
 

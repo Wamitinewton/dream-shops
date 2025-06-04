@@ -1,15 +1,16 @@
 package com.newton.dream_shops.security.oauth;
 
 import com.newton.dream_shops.models.auth.User;
+import com.newton.dream_shops.repository.auth.UserRepository;
 import com.newton.dream_shops.util.JwtHelperService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -17,16 +18,17 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     @Value("${app.oauth2.authorizedRedirectUri}")
     private String redirectUri;
 
     private final JwtHelperService jwtHelperService;
+    private final UserRepository userRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -35,7 +37,6 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         String targetUrl = determineTargetUrl(request, response, authentication);
 
         if (response.isCommitted()) {
-            log.debug("Response has already been committed. Unable to redirect to " + targetUrl);
             return;
         }
 
@@ -47,8 +48,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     protected String determineTargetUrl(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) {
 
-        OAuth2UserPrincipal oAuth2UserPrincipal = (OAuth2UserPrincipal) authentication.getPrincipal();
-        User user = oAuth2UserPrincipal.getUser();
+        User user = extractUserFromAuthentication(authentication);
+
+        if (user == null) {
+            authentication.getPrincipal().getClass().getSimpleName();
+            return buildErrorUrl("User extraction failed");
+        }
 
         try {
             String[] tokens = jwtHelperService.generateTokenPair(user);
@@ -62,11 +67,54 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                     .build().toUriString();
 
         } catch (Exception e) {
-            log.error("Error generating tokens for OAuth2 user: {}", e.getMessage());
-            return UriComponentsBuilder.fromUriString(redirectUri)
-                    .queryParam("error", URLEncoder.encode("Authentication failed", StandardCharsets.UTF_8))
-                    .queryParam("success", "false")
-                    .build().toUriString();
+            return buildErrorUrl("Authentication failed");
         }
+    }
+
+    private User extractUserFromAuthentication(Authentication authentication) {
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof OAuth2UserPrincipal) {
+            User user = ((OAuth2UserPrincipal) principal).getUser();
+            return user;
+        }
+
+        if (principal instanceof OidcUser) {
+            OidcUser oidcUser = (OidcUser) principal;
+            String email = oidcUser.getEmail();
+
+            if (email != null) {
+                Optional<User> userOptional = userRepository.findByEmail(email);
+                if (userOptional.isPresent()) {
+                    return userOptional.get();
+                } else {
+                }
+            } else {
+            }
+        }
+
+        if (principal instanceof OAuth2User) {
+            OAuth2User oauth2User = (OAuth2User) principal;
+            String email = oauth2User.getAttribute("email");
+
+            if (email != null) {
+                Optional<User> userOptional = userRepository.findByEmail(email);
+                if (userOptional.isPresent()) {
+                    return userOptional.get();
+                } else {
+                }
+            } else {
+            }
+        }
+
+        principal.getClass().getSimpleName();
+        return null;
+    }
+
+    private String buildErrorUrl(String errorMessage) {
+        return UriComponentsBuilder.fromUriString(redirectUri)
+                .queryParam("error", URLEncoder.encode(errorMessage, StandardCharsets.UTF_8))
+                .queryParam("success", "false")
+                .build().toUriString();
     }
 }

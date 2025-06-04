@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: dream-shops
+  config:
+    import: "file:keys.properties"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        default_schema: public
+  datasource:
+    url: ${database.url}
+    username: ${database.username}
+    password: ${database.password}
+    driver-class-name: org.postgresql.Driver
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${google.client.id}
+            client-secret: ${google.client.secret}
+            scope: openid,profile,email
+            redirect-uri: ${google.redirect.uri}
+            authorization-grant-type: authorization_code
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+server:
+  port: 8085
+  servlet:
+    context-path: /
+
+firebase:
+  bucket-name: ${firebase.bucket.name}
+  credentials:
+    path: service-account.json
+
+app:
+  jwtSecret: ${jwt.secret}
+  jwtExpirationMs: ${jwt.expiration.ms}
+  jwtRefreshExpirationMs: ${jwt.refresh.expiration.ms}
+  oauth2:
+    authorizedRedirectUri: ${oauth2.authorized.redirect.uri}
+
+api:
+  prefix: api/v1
+
+logging:
+  level:
+    com.newton.dream_shops.security.oauth: DEBUG
+    com.newton.dream_shops.services.auth: DEBUG
+    org.springframework.security: DEBUG

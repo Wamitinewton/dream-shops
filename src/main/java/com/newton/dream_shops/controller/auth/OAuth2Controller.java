@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +28,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("${api.prefix}/auth/oauth2")
 @RequiredArgsConstructor
-@Slf4j
 @Tag(name = "OAuth2 Authentication", description = "OAuth2 authentication endpoints")
 public class OAuth2Controller {
 
@@ -42,7 +40,7 @@ public class OAuth2Controller {
     @Operation(summary = "Initiate Google OAuth2 authentication", description = "Redirects user to Google OAuth2 authorization page")
     @GetMapping("/google")
     public void initiateGoogleAuth(HttpServletResponse response) throws IOException {
-        String authUrl = "/oauth2/authorization/google";
+        String authUrl = "/oauth2/authorize/google";
         response.sendRedirect(authUrl);
     }
 
@@ -58,11 +56,8 @@ public class OAuth2Controller {
             HttpServletResponse response,
             Authentication authentication) throws IOException {
 
-        log.info("OAuth2 callback received for provider: {}", provider);
-
         try {
             if (error != null) {
-                log.error("OAuth2 error: {} - {}", error, errorDescription);
                 redirectWithError(response, "OAuth2 authentication failed: " + errorDescription);
                 return;
             }
@@ -77,15 +72,12 @@ public class OAuth2Controller {
                 authService.cleanUpExpiredTokens();
                 authService.limitActiveTokensPerUser(user.getId());
 
-                log.info("OAuth2 authentication successful for user: {}", user.getEmail());
                 redirectWithSuccess(response, accessToken, refreshToken);
             } else {
-                log.warn("OAuth2 authentication failed - no valid authentication found");
                 redirectWithError(response, "Authentication failed");
             }
 
         } catch (Exception e) {
-            log.error("Error processing OAuth2 callback: {}", e.getMessage(), e);
             redirectWithError(response, "Authentication processing failed");
         }
     }
@@ -111,7 +103,6 @@ public class OAuth2Controller {
             return ResponseEntity.ok(new ApiResponse("User information retrieved successfully", userData));
 
         } catch (Exception e) {
-            log.error("Error retrieving current user: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse("Failed to retrieve user information", null));
         }
@@ -145,7 +136,6 @@ public class OAuth2Controller {
             return ResponseEntity.ok(new ApiResponse("Tokens generated successfully", tokenData));
 
         } catch (Exception e) {
-            log.error("Error generating tokens from OAuth2: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse("Failed to generate tokens", null));
         }

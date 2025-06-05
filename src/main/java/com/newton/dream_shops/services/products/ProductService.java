@@ -1,5 +1,6 @@
 package com.newton.dream_shops.services.products;
 
+import com.newton.dream_shops.config.CacheConfig;
 import com.newton.dream_shops.dto.image.ImageResponseDto;
 import com.newton.dream_shops.dto.product.AddProductsRequest;
 import com.newton.dream_shops.dto.product.ProductDto;
@@ -11,10 +12,12 @@ import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.repository.category.CategoryRepository;
 import com.newton.dream_shops.repository.image.ImageRepository;
 import com.newton.dream_shops.repository.product.ProductRepository;
-
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +32,15 @@ public class ProductService implements IProductService {
     private final ModelMapper modelMapper;
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
+    })
     public Product addProduct(AddProductsRequest request) {
         // check if the category is found in the database
         // If yes, set it as the new product category
@@ -38,7 +50,8 @@ public class ProductService implements IProductService {
         /**
          * A container object which may or may not contain a non-null value.
          * If a value is present, isPresent() returns true.
-         *  If no value is present, the object is considered empty and isPresent() returns false
+         * If no value is present, the object is considered empty and isPresent()
+         * returns false
          */
         Category category = Optional.ofNullable(categoryRepository.findByName(request.getCategory().getName()))
                 .orElseGet(() -> {
@@ -56,16 +69,17 @@ public class ProductService implements IProductService {
                 request.getDescription(),
                 request.getPrice(),
                 request.getInventory(),
-                category
-        );
+                category);
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#productId")
     public Product getProductById(Long id) {
         return productRepository.findById(id).orElseThrow(() -> new CustomException("Product Not Found"));
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, key = "#categoryId")
     public List<Product> getProductsByCategoryId(Long categoryId) {
 
         Category category = categoryRepository.findById(categoryId)
@@ -74,8 +88,17 @@ public class ProductService implements IProductService {
 
     }
 
-
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#productId"),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
+    })
     public Product updateProduct(ProductsUpdateRequest productsUpdateRequest, Long productId) {
         return productRepository.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, productsUpdateRequest))
@@ -96,6 +119,16 @@ public class ProductService implements IProductService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#id"),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
+            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
+    })
     public void deleteProduct(Long id) {
         productRepository.findById(id).ifPresentOrElse(productRepository::delete, () -> {
             throw new CustomException("Product Not Found");
@@ -103,36 +136,43 @@ public class ProductService implements IProductService {
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS)
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, key = "#category")
     public List<Product> getProductsByCategory(String category) {
         return productRepository.findByCategoryName(category);
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, key = "#brand")
     public List<Product> getProductByBrand(String brand) {
         return productRepository.findByBrand(brand);
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, key = "#category + '-' + #brand")
     public List<Product> getProductByCategoryAndBrand(String category, String brand) {
         return productRepository.findByCategoryNameAndBrand(category, brand);
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, key = "#name")
     public List<Product> getProductByName(String name) {
         return productRepository.findByName(name);
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, key = "#brand + '-' + #name")
     public List<Product> getProductByBrandAndName(String brand, String name) {
         return productRepository.findByBrandAndName(brand, name);
     }
 
     @Override
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCT_COUNT, key = "#brand + '-' + #name")
     public Long countProductsByBrandAndName(String brand, String name) {
         return productRepository.countByBrandAndName(brand, name);
     }
@@ -146,8 +186,8 @@ public class ProductService implements IProductService {
     public ProductDto toProductDto(Product product) {
         ProductDto productDto = modelMapper.map(product, ProductDto.class);
         List<Image> images = imageRepository.findByProductId(product.getId());
-        List<ImageResponseDto> imageResponseDtos = images.stream().
-                map(image -> modelMapper.map(image, ImageResponseDto.class))
+        List<ImageResponseDto> imageResponseDtos = images.stream()
+                .map(image -> modelMapper.map(image, ImageResponseDto.class))
                 .toList();
 
         productDto.setImages(imageResponseDtos);

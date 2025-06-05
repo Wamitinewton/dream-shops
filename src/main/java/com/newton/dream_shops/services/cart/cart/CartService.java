@@ -6,7 +6,7 @@ import com.newton.dream_shops.models.cart.Cart;
 import com.newton.dream_shops.repository.auth.UserRepository;
 import com.newton.dream_shops.repository.cart.CartItemRepository;
 import com.newton.dream_shops.repository.cart.CartRepository;
-import com.newton.dream_shops.util.JwtHelperService;
+import com.newton.dream_shops.util.jwt.JwtHelperService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;

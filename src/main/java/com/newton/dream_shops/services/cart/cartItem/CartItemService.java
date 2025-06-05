@@ -8,7 +8,8 @@ import com.newton.dream_shops.repository.cart.CartItemRepository;
 import com.newton.dream_shops.repository.cart.CartRepository;
 import com.newton.dream_shops.services.cart.cart.ICartService;
 import com.newton.dream_shops.services.products.IProductService;
-import com.newton.dream_shops.util.JwtHelperService;
+import com.newton.dream_shops.util.jwt.JwtHelperService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;

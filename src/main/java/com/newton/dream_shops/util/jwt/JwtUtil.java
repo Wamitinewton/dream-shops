@@ -1,4 +1,4 @@
-package com.newton.dream_shops.util;
+package com.newton.dream_shops.util.jwt;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

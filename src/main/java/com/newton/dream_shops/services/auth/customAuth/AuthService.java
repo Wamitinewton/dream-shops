@@ -21,7 +21,7 @@ import com.newton.dream_shops.models.auth.RefreshToken;
 import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.RefreshTokenRepository;
 import com.newton.dream_shops.repository.auth.UserRepository;
-import com.newton.dream_shops.util.JwtHelperService;
+import com.newton.dream_shops.util.jwt.JwtHelperService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;

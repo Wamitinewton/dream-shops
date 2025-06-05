@@ -1,4 +1,4 @@
-package com.newton.dream_shops.util;
+package com.newton.dream_shops.util.jwt;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

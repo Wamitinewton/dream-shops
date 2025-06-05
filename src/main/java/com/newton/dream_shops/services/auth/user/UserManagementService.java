@@ -12,7 +12,7 @@ import com.newton.dream_shops.dto.auth.UserInfo;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.UserRepository;
-import com.newton.dream_shops.util.JwtHelperService;
+import com.newton.dream_shops.util.jwt.JwtHelperService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

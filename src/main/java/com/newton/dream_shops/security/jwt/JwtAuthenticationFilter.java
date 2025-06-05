@@ -1,7 +1,8 @@
 package com.newton.dream_shops.security.jwt;
 
 import com.newton.dream_shops.services.auth.user.UserDetailsServiceImpl;
-import com.newton.dream_shops.util.JwtUtil;
+import com.newton.dream_shops.util.jwt.JwtUtil;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

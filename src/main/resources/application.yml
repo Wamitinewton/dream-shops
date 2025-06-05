@@ -14,6 +14,33 @@ spring:
     username: ${database.username}
     password: ${database.password}
     driver-class-name: org.postgresql.Driver
+  
+  # Redis Configuration
+  data:
+    redis:
+      host: ${redis.host}
+      port: ${redis.port:6379}
+      password: ${redis.password}
+      database: ${redis.database}
+      timeout: 2000ms
+      jedis:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+      ssl:
+        enabled: false
+  
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 
+      cache-null-values: false
+      use-key-prefix: true
+      key-prefix: dream-shops
+  
   security:
     oauth2:
       client:
@@ -47,6 +74,11 @@ app:
   jwtRefreshExpirationMs: ${jwt.refresh.expiration.ms}
   oauth2:
     authorizedRedirectUri: ${oauth2.authorized.redirect.uri}
+  cache:
+    ttl:
+      products: 600 # 10 minutes
+      categories: 1800 # 30 minutes
+      users: 300 # 5 minutes
 
 api:
   prefix: api/v1
@@ -55,4 +87,6 @@ logging:
   level:
     com.newton.dream_shops.security.oauth: DEBUG
     com.newton.dream_shops.services.auth: DEBUG
+    com.newton.dream_shops.cache: DEBUG
+    org.springframework.cache: DEBUG
     org.springframework.security: DEBUG

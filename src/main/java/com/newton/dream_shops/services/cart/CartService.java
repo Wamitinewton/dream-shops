@@ -25,25 +25,34 @@ public class CartService implements ICartService {
     private final JwtHelperService jwtHelperService;
 
     @Override
-    @Transactional
     public Cart getCartByUserId(Long userId) {
-        return cartRepository.findByUserId(userId);
+        Cart cart = cartRepository.findCartByUserId(userId);
+
+        if (cart == null) {
+            return null;
+        }
+        return cart;
     }
 
     @Override
     @Transactional
     public Cart getOrCreateCartForUser(Long userId) {
-        Cart exisitingCart = getCartByUserId(userId);
-        if (exisitingCart != null) {
-            return exisitingCart;
+
+        Cart cart = cartRepository.findCartByUserId(userId);
+
+        if (cart != null) {
+            return cart;
         }
 
         User user = userRepository.findById(userId)
-        .orElseThrow(() -> new CustomException("User not found"));
+                .orElseThrow(() -> new CustomException("User not found with id: " + userId));
 
-        Cart newCart = new Cart();
-        newCart.setUser(user);
-        return cartRepository.save(newCart);
+        cart = new Cart();
+        cart.setUser(user);
+        cart.setTotalAmount(BigDecimal.ZERO);
+
+        Cart savedCart = cartRepository.save(cart);
+        return savedCart;
     }
 
     @Override
@@ -61,12 +70,17 @@ public class CartService implements ICartService {
     public void clearCartForUser(Long userId) {
         Cart cart = getCartByUserId(userId);
         if (cart != null) {
-            cartItemRepository.deleteAllByCartId(cart.getId());
-            Cart refreshedCart = cartRepository.findById(cart.getId())
-                    .orElseThrow(() -> new CustomException("Cart not found"));
+            Long cartId = cart.getId();
+            cartItemRepository.deleteAllByCartId(cartId);
+            cartRepository.flush();
+
+            Cart refreshedCart = cartRepository.findById(cartId)
+                    .orElseThrow(() -> new CustomException("Cart not found after clearing items"));
             refreshedCart.getCartItems().clear();
             refreshedCart.setTotalAmount(BigDecimal.ZERO);
             cartRepository.save(refreshedCart);
+
+        } else {
         }
     }
 
@@ -78,20 +92,20 @@ public class CartService implements ICartService {
             throw new CustomException("User Authentication required");
         }
         clearCartForUser(userId);
-        }
+    }
 
     @Override
     public BigDecimal getTotalForUser(Long userId) {
         Cart cart = getCartByUserId(userId);
         return cart != null ? cart.getTotalAmount() : BigDecimal.ZERO;
-        }
+    }
 
     @Override
     public BigDecimal getTotalForCurrentUser(HttpServletRequest request) {
-        Long userId =jwtHelperService.getCurrentUserIdFromRequest(request);
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
         if (userId == null) {
             throw new CustomException("User authentication required");
         }
         return getTotalForUser(userId);
-        }
+    }
 }

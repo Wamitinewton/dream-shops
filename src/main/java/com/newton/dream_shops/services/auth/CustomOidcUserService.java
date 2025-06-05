@@ -53,11 +53,22 @@ public class CustomOidcUserService extends OidcUserService {
             user = userOptional.get();
 
             AuthProvider requestProvider = AuthProvider.valueOf(registrationId.toUpperCase());
+
             if (!user.getProvider().equals(requestProvider)) {
-                throw new CustomException("You're signed up with " + user.getProvider() +
-                        " account. Please use your " + user.getProvider() + " account to login.");
+                // If user has LOCAL provider (email/password), allow OAuth2 login and update
+                // provider
+                if (user.getProvider() == AuthProvider.LOCAL) {
+                    user.setProvider(requestProvider);
+                    user.setProviderId(oidcUser.getSubject());
+                    user = updateExistingUser(user, oidcUser);
+                } else {
+                    // User has a different OAuth2 provider
+                    throw new CustomException("You're signed up with " + user.getProvider() +
+                            " account. Please use your " + user.getProvider() + " account to login.");
+                }
+            } else {
+                user = updateExistingUser(user, oidcUser);
             }
-            user = updateExistingUser(user, oidcUser);
         } else {
             user = registerNewUser(userRequest, oidcUser);
         }

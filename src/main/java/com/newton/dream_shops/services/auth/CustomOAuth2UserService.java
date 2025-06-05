@@ -59,9 +59,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user = userOptional.get();
 
             AuthProvider requestProvider = AuthProvider.valueOf(registrationId.toUpperCase());
+
             if (!user.getProvider().equals(requestProvider)) {
-                throw new CustomException("You're signed up with " + user.getProvider() +
-                        " account. Please use your " + user.getProvider() + " account to login.");
+
+                if (user.getProvider() == AuthProvider.LOCAL) {
+                    user.setProvider(requestProvider);
+                    user.setProviderId(oAuth2UserInfo.getId());
+                    user = updateExistingUser(user, oAuth2UserInfo);
+                } else {
+                    throw new CustomException("You're signed up with " + user.getProvider() +
+                            " account. Please use your " + user.getProvider() + " account to login.");
+                }
             }
             user = updateExistingUser(user, oAuth2UserInfo);
         } else {

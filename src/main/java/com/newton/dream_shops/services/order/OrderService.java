@@ -16,8 +16,6 @@ import com.newton.dream_shops.util.JwtHelperService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +26,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class OrderService implements IOrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
@@ -38,15 +35,13 @@ public class OrderService implements IOrderService {
 
     @Override
     @Transactional
-    public Order placeOrder(HttpServletRequest request) {
+    public OrderDto placeOrder(HttpServletRequest request) {
         Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
         if (userId == null) {
             throw new CustomException("User authentication required");
         }
 
-        log.info("Placing order for user: {}", userId);
-
-        Cart cart = cartService.getCartByUserId(userId);
+        Cart cart = cartService.getOrCreateCartForUser(userId);
         validateCartForOrder(cart);
 
         validateInventoryAvailability(cart);
@@ -61,12 +56,12 @@ public class OrderService implements IOrderService {
 
         cartService.clearCartForUser(userId);
 
-        return savedOrder;
+        return convertToDto(savedOrder);
     }
 
     @Override
     @Transactional
-    public Order placeOrderForUser(Long userId) {
+    public OrderDto placeOrderForUser(Long userId) {
         if (userId == null) {
             throw new CustomException("User ID cannot be null");
         }
@@ -86,8 +81,7 @@ public class OrderService implements IOrderService {
 
         cartService.clearCartForUser(userId);
 
-        log.info("Order placed successfully with ID: {}", savedOrder.getId());
-        return savedOrder;
+        return convertToDto(savedOrder);
     }
 
     private void validateCartForOrder(Cart cart) {
@@ -113,9 +107,8 @@ public class OrderService implements IOrderService {
 
             if (product.getInventory() < cartItem.getQuantity()) {
                 throw new CustomException(
-                    String.format("Insufficient inventory for product '%s'. Available: %d, Requested: %d",
-                        product.getName(), product.getInventory(), cartItem.getQuantity())
-                );
+                        String.format("Insufficient inventory for product '%s'. Available: %d, Requested: %d",
+                                product.getName(), product.getInventory(), cartItem.getQuantity()));
             }
 
             if (cartItem.getQuantity() <= 0) {
@@ -143,8 +136,7 @@ public class OrderService implements IOrderService {
                     order,
                     product,
                     cartItem.getQuantity(),
-                    cartItem.getUnitPrice()
-            );
+                    cartItem.getUnitPrice());
         }).toList();
     }
 
@@ -152,13 +144,13 @@ public class OrderService implements IOrderService {
         return orderItemsList
                 .stream()
                 .map(orderItem -> orderItem.getPrice().multiply(
-                        new BigDecimal(orderItem.getQuantity())
-                )).reduce(BigDecimal.ZERO, BigDecimal::add);
+                        new BigDecimal(orderItem.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override
     @Transactional
-    public Order updateOrderStatus(Long orderId, OrderStatus newStatus) {
+    public OrderDto updateOrderStatus(Long orderId, OrderStatus newStatus) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomException("Order not found"));
 
@@ -172,9 +164,7 @@ public class OrderService implements IOrderService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        log.info("Order {} status updated from {} to {}", orderId, oldStatus, newStatus);
-
-        return savedOrder;
+        return convertToDto(savedOrder);
     }
 
     private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
@@ -187,8 +177,7 @@ public class OrderService implements IOrderService {
 
         if (!isValidTransition) {
             throw new CustomException(
-                String.format("Invalid status transition from %s to %s", currentStatus, newStatus)
-            );
+                    String.format("Invalid status transition from %s to %s", currentStatus, newStatus));
         }
     }
 
@@ -199,8 +188,6 @@ public class OrderService implements IOrderService {
             product.setInventory(restoredInventory);
             productRepository.save(product);
 
-            log.info("Restored inventory for product '{}': +{} (total: {})",
-                product.getName(), orderItem.getQuantity(), restoredInventory);
         }
     }
 

@@ -3,8 +3,6 @@ package com.newton.dream_shops.util;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 

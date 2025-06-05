@@ -24,12 +24,20 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
 
+        String errorMessage = exception.getLocalizedMessage();
+        if (errorMessage == null || errorMessage.trim().isEmpty()) {
+            errorMessage = exception.getMessage();
+        }
+        if (errorMessage == null || errorMessage.trim().isEmpty()) {
+            errorMessage = "Authentication failed";
+        }
+
         String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
-                .queryParam("error", URLEncoder.encode(exception.getLocalizedMessage(), StandardCharsets.UTF_8))
+                .queryParam("error", URLEncoder.encode(errorMessage, StandardCharsets.UTF_8))
                 .queryParam("success", "false")
                 .build().toUriString();
 
-        log.error("OAuth2 authentication failed: {}", exception.getMessage());
+        log.error("OAuth2 authentication failed: {}", errorMessage);
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

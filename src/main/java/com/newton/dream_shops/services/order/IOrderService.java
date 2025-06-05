@@ -14,14 +14,14 @@ public interface IOrderService {
      * @param request HTTP request containing user authentication
      * @return Created order
      */
-    Order placeOrder(HttpServletRequest request);
+    OrderDto placeOrder(HttpServletRequest request);
     
     /**
      * Place an order for a specific user
      * @param userId User ID to place order for
      * @return Created order
      */
-    Order placeOrderForUser(Long userId);
+    OrderDto placeOrderForUser(Long userId);
     
     /**
      * Update order status
@@ -29,7 +29,7 @@ public interface IOrderService {
      * @param newStatus New status to set
      * @return Updated order
      */
-    Order updateOrderStatus(Long orderId, OrderStatus newStatus);
+    OrderDto updateOrderStatus(Long orderId, OrderStatus newStatus);
     
     /**
      * Get order by ID

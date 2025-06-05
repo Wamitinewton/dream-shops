@@ -11,7 +11,7 @@ public class OrderDto {
     private Long id;
     private Long userId;
     private LocalDateTime orderDate;
-    private BigDecimal totalAmount;
+    private BigDecimal totalPrice; 
     private String status;
-    private List<OrderItemDto> item;
+    private List<OrderItemDto> orderItems;
 }

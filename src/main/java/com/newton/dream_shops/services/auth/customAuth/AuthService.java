@@ -1,4 +1,4 @@
-package com.newton.dream_shops.services.auth;
+package com.newton.dream_shops.services.auth.customAuth;
 
 import java.util.Optional;
 import org.modelmapper.ModelMapper;
@@ -218,8 +218,6 @@ public class AuthService implements IAuthService {
 
         return userInfo;
     }
-
-  
 
     @Override
     public String generateRefreshToken(User user) {

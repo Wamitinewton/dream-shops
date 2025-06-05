@@ -10,7 +10,7 @@ import com.newton.dream_shops.models.order.OrderItem;
 import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.repository.order.OrderRepository;
 import com.newton.dream_shops.repository.product.ProductRepository;
-import com.newton.dream_shops.services.cart.ICartService;
+import com.newton.dream_shops.services.cart.cart.ICartService;
 import com.newton.dream_shops.util.JwtHelperService;
 
 import jakarta.servlet.http.HttpServletRequest;

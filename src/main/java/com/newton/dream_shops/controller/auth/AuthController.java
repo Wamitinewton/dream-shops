@@ -3,7 +3,8 @@ package com.newton.dream_shops.controller.auth;
 import com.newton.dream_shops.dto.auth.*;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.response.ApiResponse;
-import com.newton.dream_shops.services.auth.IAuthService;
+import com.newton.dream_shops.services.auth.customAuth.IAuthService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package com.newton.dream_shops.services.cart;
+package com.newton.dream_shops.services.cart.cart;
 
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.auth.User;

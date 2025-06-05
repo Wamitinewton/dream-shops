@@ -2,7 +2,8 @@ package com.newton.dream_shops.controller.cart;
 
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.response.ApiResponse;
-import com.newton.dream_shops.services.cart.ICartItemService;
+import com.newton.dream_shops.services.cart.cartItem.ICartItemService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,11 +1,12 @@
-package com.newton.dream_shops.services.auth;
+package com.newton.dream_shops.services.auth.oauth;
 
 import com.newton.dream_shops.enums.AuthProvider;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.UserRepository;
 import com.newton.dream_shops.security.oauth.OAuth2UserPrincipal;
-import com.newton.dream_shops.services.cart.ICartService;
+import com.newton.dream_shops.services.cart.cart.ICartService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;

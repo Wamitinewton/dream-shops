@@ -2,8 +2,8 @@ package com.newton.dream_shops.controller.auth;
 
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.security.oauth.OAuth2UserPrincipal;
+import com.newton.dream_shops.services.auth.customAuth.AuthService;
 import com.newton.dream_shops.models.auth.User;
-import com.newton.dream_shops.services.auth.AuthService;
 import com.newton.dream_shops.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

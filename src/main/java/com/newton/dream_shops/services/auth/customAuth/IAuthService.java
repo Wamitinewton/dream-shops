@@ -1,4 +1,4 @@
-package com.newton.dream_shops.services.auth;
+package com.newton.dream_shops.services.auth.customAuth;
 
 import com.newton.dream_shops.dto.auth.*;
 import com.newton.dream_shops.models.auth.RefreshToken;

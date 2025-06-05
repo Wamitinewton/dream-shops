@@ -3,7 +3,7 @@ package com.newton.dream_shops.controller.cart;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.cart.Cart;
 import com.newton.dream_shops.response.ApiResponse;
-import com.newton.dream_shops.services.cart.ICartService;
+import com.newton.dream_shops.services.cart.cart.ICartService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.newton.dream_shops.services.cart;
+package com.newton.dream_shops.services.cart.cartItem;
 
 import com.newton.dream_shops.models.cart.CartItem;
 

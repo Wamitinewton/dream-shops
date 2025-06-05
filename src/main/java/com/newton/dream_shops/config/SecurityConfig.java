@@ -4,9 +4,10 @@ import com.newton.dream_shops.security.jwt.JwtAuthenticationEntryPoint;
 import com.newton.dream_shops.security.jwt.JwtAuthenticationFilter;
 import com.newton.dream_shops.security.oauth.OAuth2AuthenticationFailureHandler;
 import com.newton.dream_shops.security.oauth.OAuth2AuthenticationSuccessHandler;
-import com.newton.dream_shops.services.auth.CustomOAuth2UserService;
-import com.newton.dream_shops.services.auth.CustomOidcUserService;
-import com.newton.dream_shops.services.auth.UserDetailsServiceImpl;
+import com.newton.dream_shops.services.auth.oauth.CustomOAuth2UserService;
+import com.newton.dream_shops.services.auth.oauth.CustomOidcUserService;
+import com.newton.dream_shops.services.auth.user.UserDetailsServiceImpl;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

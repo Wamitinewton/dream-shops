@@ -1,4 +1,4 @@
-package com.newton.dream_shops.services.auth;
+package com.newton.dream_shops.services.auth.user;
 
 import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.UserRepository;

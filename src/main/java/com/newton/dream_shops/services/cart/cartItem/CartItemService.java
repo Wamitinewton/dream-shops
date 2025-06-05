@@ -1,4 +1,4 @@
-package com.newton.dream_shops.services.cart;
+package com.newton.dream_shops.services.cart.cartItem;
 
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.cart.Cart;
@@ -6,6 +6,7 @@ import com.newton.dream_shops.models.cart.CartItem;
 import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.repository.cart.CartItemRepository;
 import com.newton.dream_shops.repository.cart.CartRepository;
+import com.newton.dream_shops.services.cart.cart.ICartService;
 import com.newton.dream_shops.services.products.IProductService;
 import com.newton.dream_shops.util.JwtHelperService;
 import jakarta.servlet.http.HttpServletRequest;

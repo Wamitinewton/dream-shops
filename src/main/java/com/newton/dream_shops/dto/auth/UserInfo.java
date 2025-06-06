@@ -1,9 +1,5 @@
 package com.newton.dream_shops.dto.auth;
 
-import java.util.List;
-
-import com.newton.dream_shops.dto.cart.CartDto;
-import com.newton.dream_shops.dto.order.OrderDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

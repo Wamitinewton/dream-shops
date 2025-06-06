@@ -8,27 +8,27 @@ import com.newton.dream_shops.models.product.Product;
 import java.util.List;
 
 public interface IProductService {
-    Product addProduct(AddProductsRequest product);
+    ProductDto addProduct(AddProductsRequest product);
 
-    Product getProductById(Long id);
+    ProductDto getProductById(Long id);
 
-    List<Product> getProductsByCategoryId(Long categoryId);
+    List<ProductDto> getProductsByCategoryId(Long categoryId);
 
-    Product updateProduct(ProductsUpdateRequest product, Long productId);
+    ProductDto updateProduct(ProductsUpdateRequest product, Long productId);
 
     void deleteProduct(Long id);
 
-    List<Product> getAllProducts();
+    List<ProductDto> getAllProducts();
 
-    List<Product> getProductsByCategory(String category);
+    List<ProductDto> getProductsByCategory(String category);
 
-    List<Product> getProductByBrand(String brand);
+    List<ProductDto> getProductByBrand(String brand);
 
-    List<Product> getProductByCategoryAndBrand(String category, String brand);
+    List<ProductDto> getProductByCategoryAndBrand(String category, String brand);
 
-    List<Product> getProductByName(String name);
+    List<ProductDto> getProductByName(String name);
 
-    List<Product> getProductByBrandAndName(String brand, String name);
+    List<ProductDto> getProductByBrandAndName(String brand, String name);
 
     Long countProductsByBrandAndName(String brand, String name);
 

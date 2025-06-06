@@ -3,10 +3,12 @@ package com.newton.dream_shops.services.images;
 import com.newton.dream_shops.dto.firebase.FirebaseFileDto;
 import com.newton.dream_shops.dto.image.ImageResponseDto;
 import com.newton.dream_shops.dto.image.ImageUploadDto;
+import com.newton.dream_shops.dto.product.ProductDto;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.image.Image;
 import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.repository.image.ImageRepository;
+import com.newton.dream_shops.repository.product.ProductRepository;
 import com.newton.dream_shops.services.firebase.FirebaseStorageService;
 import com.newton.dream_shops.services.products.IProductService;
 import jakarta.transaction.Transactional;
@@ -27,6 +29,7 @@ public class ImageService implements IImageService {
     private final ImageRepository imageRepository;
     private final IProductService productService;
     private final FirebaseStorageService firebaseStorageService;
+    private final ProductRepository productRepository;
 
     @Override
     public Image getImageById(Long id) {
@@ -49,7 +52,9 @@ public class ImageService implements IImageService {
 
     @Override
     public List<ImageResponseDto> saveImage(List<MultipartFile> files, Long productId) {
-        Product product = productService.getProductById(productId);
+         ProductDto productDto = productService.getProductById(productId);
+        Product product = productRepository.findById(productDto.getId())
+                .orElseThrow(() -> new CustomException("Product Not Found"));
 
         return files.stream()
                 .map(file -> processAndSaveImage(file, product))

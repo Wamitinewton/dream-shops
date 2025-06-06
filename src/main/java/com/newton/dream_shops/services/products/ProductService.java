@@ -41,7 +41,7 @@ public class ProductService implements IProductService {
             @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
             @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
     })
-    public Product addProduct(AddProductsRequest request) {
+    public ProductDto addProduct(AddProductsRequest request) {
         // check if the category is found in the database
         // If yes, set it as the new product category
         // If No, save it as a new category
@@ -59,7 +59,8 @@ public class ProductService implements IProductService {
                     return categoryRepository.save(newCategory);
                 });
         request.setCategory(category);
-        return productRepository.save(createProduct(request, category));
+        Product savedProduct = productRepository.save(createProduct(request, category));
+        return toProductDto(savedProduct);
     }
 
     private Product createProduct(AddProductsRequest request, Category category) {
@@ -74,17 +75,20 @@ public class ProductService implements IProductService {
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#productId")
-    public Product getProductById(Long id) {
-        return productRepository.findById(id).orElseThrow(() -> new CustomException("Product Not Found"));
+    public ProductDto getProductById(Long id) {
+        Product product = productRepository.findById(id).orElseThrow(() -> new CustomException("Product Not Found"));
+        return toProductDto(product);
     }
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, key = "#categoryId")
-    public List<Product> getProductsByCategoryId(Long categoryId) {
+    public List<ProductDto> getProductsByCategoryId(Long categoryId) {
 
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CustomException("Category Not Found"));
-        return productRepository.findByCategory(category);
+
+        List<Product> product = productRepository.findByCategory(category);
+        return getConvertedProducts(product);
 
     }
 
@@ -99,11 +103,13 @@ public class ProductService implements IProductService {
             @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
             @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
     })
-    public Product updateProduct(ProductsUpdateRequest productsUpdateRequest, Long productId) {
-        return productRepository.findById(productId)
+    public ProductDto updateProduct(ProductsUpdateRequest productsUpdateRequest, Long productId) {
+
+        Product product = productRepository.findById(productId)
                 .map(existingProduct -> updateExistingProduct(existingProduct, productsUpdateRequest))
                 .map(productRepository::save)
                 .orElseThrow(() -> new CustomException("Product Not Found"));
+        return toProductDto(product);
     }
 
     private Product updateExistingProduct(Product existingProduct, ProductsUpdateRequest productsUpdateRequest) {
@@ -137,38 +143,44 @@ public class ProductService implements IProductService {
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCTS)
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductDto> getAllProducts() {
+        List<Product> product = productRepository.findAll();
+        return getConvertedProducts(product);
     }
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, key = "#category")
-    public List<Product> getProductsByCategory(String category) {
-        return productRepository.findByCategoryName(category);
+    public List<ProductDto> getProductsByCategory(String category) {
+        List<Product> product = productRepository.findByCategoryName(category);
+        return getConvertedProducts(product);
     }
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, key = "#brand")
-    public List<Product> getProductByBrand(String brand) {
-        return productRepository.findByBrand(brand);
+    public List<ProductDto> getProductByBrand(String brand) {
+        List<Product> product = productRepository.findByBrand(brand);
+        return getConvertedProducts(product);
     }
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, key = "#category + '-' + #brand")
-    public List<Product> getProductByCategoryAndBrand(String category, String brand) {
-        return productRepository.findByCategoryNameAndBrand(category, brand);
+    public List<ProductDto> getProductByCategoryAndBrand(String category, String brand) {
+        List<Product> product = productRepository.findByCategoryNameAndBrand(category, brand);
+        return getConvertedProducts(product);
     }
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, key = "#name")
-    public List<Product> getProductByName(String name) {
-        return productRepository.findByName(name);
+    public List<ProductDto> getProductByName(String name) {
+        List<Product> product = productRepository.findByName(name);
+        return getConvertedProducts(product);
     }
 
     @Override
     @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, key = "#brand + '-' + #name")
-    public List<Product> getProductByBrandAndName(String brand, String name) {
-        return productRepository.findByBrandAndName(brand, name);
+    public List<ProductDto> getProductByBrandAndName(String brand, String name) {
+        List<Product> product = productRepository.findByBrandAndName(brand, name);
+        return getConvertedProducts(product);
     }
 
     @Override

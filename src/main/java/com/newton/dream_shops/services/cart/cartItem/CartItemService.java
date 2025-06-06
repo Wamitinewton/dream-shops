@@ -1,11 +1,13 @@
 package com.newton.dream_shops.services.cart.cartItem;
 
+import com.newton.dream_shops.dto.product.ProductDto;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.cart.Cart;
 import com.newton.dream_shops.models.cart.CartItem;
 import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.repository.cart.CartItemRepository;
 import com.newton.dream_shops.repository.cart.CartRepository;
+import com.newton.dream_shops.repository.product.ProductRepository;
 import com.newton.dream_shops.services.cart.cart.ICartService;
 import com.newton.dream_shops.services.products.IProductService;
 import com.newton.dream_shops.util.jwt.JwtHelperService;
@@ -27,19 +29,22 @@ public class CartItemService implements ICartItemService {
     private final IProductService productService;
     private final ICartService cartService;
     private final JwtHelperService jwtHelperService;
+    private final ProductRepository productRepository;
 
     @Override
     @Transactional
     public void addItemToCart(Long userId, Long productId, int quantity) {
-        //1. Get or Create The Cart for the user
-        //2. Get The Product
-        //3. Check if the product is already in the cart
-        //4. If yes, then increase the quantity with the requested quantity
-        //5. If no, then initiate a new cart item entry
+        // 1. Get or Create The Cart for the user
+        // 2. Get The Product
+        // 3. Check if the product is already in the cart
+        // 4. If yes, then increase the quantity with the requested quantity
+        // 5. If no, then initiate a new cart item entry
 
         Cart cart = cartService.getOrCreateCartForUser(userId);
-        Product product = productService.getProductById(productId);
-        
+        ProductDto productDto = productService.getProductById(productId);
+        Product product = productRepository.findById(productDto.getId())
+                .orElseThrow(() -> new CustomException("Product Not Found"));
+
         CartItem cartItem = cart.getCartItems()
                 .stream()
                 .filter(item -> item.getProduct()
@@ -84,7 +89,7 @@ public class CartItemService implements ICartItemService {
         if (cart == null) {
             throw new CustomException("Cart not found for user");
         }
-        
+
         CartItem cartItem = getCartItemForUser(userId, productId);
         cart.removeItem(cartItem);
         cartItemRepository.delete(cartItem);
@@ -119,7 +124,7 @@ public class CartItemService implements ICartItemService {
         if (cart == null) {
             throw new CustomException("Cart not found for user");
         }
-        
+
         cart.getCartItems()
                 .stream()
                 .filter(item -> item.getProduct()
@@ -169,7 +174,7 @@ public class CartItemService implements ICartItemService {
         if (cart == null) {
             throw new CustomException("Cart not found for user");
         }
-        
+
         return cart.getCartItems()
                 .stream()
                 .filter(item -> item.getProduct()

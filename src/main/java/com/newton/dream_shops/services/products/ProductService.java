@@ -1,6 +1,6 @@
 package com.newton.dream_shops.services.products;
 
-import com.newton.dream_shops.config.CacheConfig;
+import com.newton.dream_shops.constants.CacheConstants;
 import com.newton.dream_shops.dto.image.ImageResponseDto;
 import com.newton.dream_shops.dto.product.AddProductsRequest;
 import com.newton.dream_shops.dto.product.ProductDto;
@@ -12,6 +12,7 @@ import com.newton.dream_shops.models.product.Product;
 import com.newton.dream_shops.repository.category.CategoryRepository;
 import com.newton.dream_shops.repository.image.ImageRepository;
 import com.newton.dream_shops.repository.product.ProductRepository;
+import com.newton.dream_shops.util.cache.CacheKeyGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -30,16 +31,17 @@ public class ProductService implements IProductService {
     private final CategoryRepository categoryRepository;
     private final ImageRepository imageRepository;
     private final ModelMapper modelMapper;
+    private final CacheKeyGenerator cacheKeyGenerator;
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
+            @CacheEvict(value = CacheConstants.PRODUCTS, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_NAME, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCT_COUNT, allEntries = true)
     })
     public ProductDto addProduct(AddProductsRequest request) {
         // check if the category is found in the database
@@ -74,14 +76,14 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#id")
+    @Cacheable(value = CacheConstants.PRODUCT_BY_ID, key = "@cacheKeyGenerator.generateSimpleKey(#id)")
     public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id).orElseThrow(() -> new CustomException("Product Not Found"));
         return toProductDto(product);
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, key = "#categoryId")
+    @Cacheable(value = CacheConstants.PRODUCTS_BY_CATEGORY, key = "@cacheKeyGenerator.generateSimpleKey(#categoryId)")
     public List<ProductDto> getProductsByCategoryId(Long categoryId) {
 
         Category category = categoryRepository.findById(categoryId)
@@ -94,14 +96,14 @@ public class ProductService implements IProductService {
 
     @Override
     @Caching(evict = {
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#productId"),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
+            @CacheEvict(value = CacheConstants.PRODUCTS, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCT_BY_ID, key = "@cacheKeyGenerator.generateSimpleKey(#productId)"),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_NAME, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCT_COUNT, allEntries = true)
     })
     public ProductDto updateProduct(ProductsUpdateRequest productsUpdateRequest, Long productId) {
 
@@ -126,14 +128,14 @@ public class ProductService implements IProductService {
     @Override
     @Transactional
     @Caching(evict = {
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#id"),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
-            @CacheEvict(value = CacheConfig.CacheNames.PRODUCT_COUNT, allEntries = true)
+            @CacheEvict(value = CacheConstants.PRODUCTS, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCT_BY_ID, key = "@cacheKeyGenerator.generateSimpleKey(#id)"),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_CATEGORY, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_NAME, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_CATEGORY_AND_BRAND, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCTS_BY_BRAND_AND_NAME, allEntries = true),
+            @CacheEvict(value = CacheConstants.PRODUCT_COUNT, allEntries = true)
     })
     public void deleteProduct(Long id) {
         productRepository.findById(id).ifPresentOrElse(productRepository::delete, () -> {
@@ -142,49 +144,49 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS)
+    @Cacheable(value = CacheConstants.PRODUCTS)
     public List<ProductDto> getAllProducts() {
         List<Product> product = productRepository.findAll();
         return getConvertedProducts(product);
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY, key = "#category")
+    @Cacheable(value = CacheConstants.PRODUCTS_BY_CATEGORY, key = "@cacheKeyGenerator.generateSimpleKey(#category)")
     public List<ProductDto> getProductsByCategory(String category) {
         List<Product> product = productRepository.findByCategoryName(category);
         return getConvertedProducts(product);
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND, key = "#brand")
+    @Cacheable(value = CacheConstants.PRODUCTS_BY_BRAND, key = "@cacheKeyGenerator.generateSimpleKey(#brand)")
     public List<ProductDto> getProductByBrand(String brand) {
         List<Product> product = productRepository.findByBrand(brand);
         return getConvertedProducts(product);
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND, key = "#category + '-' + #brand")
+    @Cacheable(value = CacheConstants.PRODUCTS_BY_CATEGORY_AND_BRAND, key = "@cacheKeyGenerator.generateKey(#category, #brand)")
     public List<ProductDto> getProductByCategoryAndBrand(String category, String brand) {
         List<Product> product = productRepository.findByCategoryNameAndBrand(category, brand);
         return getConvertedProducts(product);
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_NAME, key = "#name")
+    @Cacheable(value = CacheConstants.PRODUCTS_BY_NAME, key = "@cacheKeyGenerator.generateSimpleKey(#name)")
     public List<ProductDto> getProductByName(String name) {
         List<Product> product = productRepository.findByName(name);
         return getConvertedProducts(product);
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCTS_BY_BRAND_AND_NAME, key = "#brand + '-' + #name")
+    @Cacheable(value = CacheConstants.PRODUCTS_BY_BRAND_AND_NAME, key = "@cacheKeyGenerator.generateKey(#brand, #name)")
     public List<ProductDto> getProductByBrandAndName(String brand, String name) {
         List<Product> product = productRepository.findByBrandAndName(brand, name);
         return getConvertedProducts(product);
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCT_COUNT, key = "#brand + '-' + #name")
+    @Cacheable(value = CacheConstants.PRODUCT_COUNT, key = "@cacheKeyGenerator.generateKey(#brand, #name)")
     public Long countProductsByBrandAndName(String brand, String name) {
         return productRepository.countByBrandAndName(brand, name);
     }

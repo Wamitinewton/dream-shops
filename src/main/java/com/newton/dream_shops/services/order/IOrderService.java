@@ -2,7 +2,6 @@ package com.newton.dream_shops.services.order;
 
 import com.newton.dream_shops.dto.order.OrderDto;
 import com.newton.dream_shops.enums.OrderStatus;
-import com.newton.dream_shops.models.order.Order;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;

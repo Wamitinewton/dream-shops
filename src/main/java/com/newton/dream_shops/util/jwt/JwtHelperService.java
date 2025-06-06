@@ -25,9 +25,7 @@ public class JwtHelperService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    /**
-     * Extract JWT token from Authorization header
-     */
+   
     public String extractTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
@@ -36,17 +34,13 @@ public class JwtHelperService {
         throw new CustomException("Authorization token is required");
     }
 
-    /**
-     * Get current user ID from JWT token in servlet request
-     */
+   
     public Long getCurrentUserIdFromRequest(HttpServletRequest request) {
         String token = extractTokenFromRequest(request);
         return getCurrentUserIdFromToken(token);
     }
 
-    /**
-     * Get current user ID from JWT token
-     */
+  
     public Long getCurrentUserIdFromToken(String token) {
         try {
             if (!jwtUtil.validateToken(token)) {
@@ -64,9 +58,6 @@ public class JwtHelperService {
         }
     }
 
-    /**
-     * Get current username from JWT token in request
-     */
     public String getCurrentUsernameFromRequest(HttpServletRequest request) {
         String token = extractTokenFromRequest(request);
         return jwtUtil.getUsernameFromToken(token);
@@ -202,10 +193,7 @@ public class JwtHelperService {
         }
     }
 
-    /**
-     * Limit the number of active tokens per user
-     * If user has too many active tokens, revoke all of them
-     */
+
     public void limitActiveTokensPerUser(Long userId) {
         try {
             int activeTokenCount = refreshTokenRepository.countActiveTokensByUser(userId, LocalDateTime.now());
@@ -224,25 +212,6 @@ public class JwtHelperService {
     public void limitActiveTokensForCurrentUser(HttpServletRequest request) {
         Long userId = getCurrentUserIdFromRequest(request);
         limitActiveTokensPerUser(userId);
-    }
-
-    /**
-     * Get count of active refresh tokens for a user
-     */
-    public int getActiveTokenCount(Long userId) {
-        try {
-            return refreshTokenRepository.countActiveTokensByUser(userId, LocalDateTime.now());
-        } catch (Exception e) {
-            log.error("Error getting active token count for user {}: {}", userId, e.getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * Check if a refresh token is valid (exists, not revoked, not expired)
-     */
-    public boolean isRefreshTokenValid(String token) {
-        return findValidRefreshToken(token).isPresent();
     }
 
     /**

@@ -20,6 +20,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.newton.dream_shops.constants.CacheConstants;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -43,7 +44,6 @@ public class CacheConfig {
         mapper.configure(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         return mapper;
     }
-
 
     @Bean("cacheValueSerializer")
     public GenericJackson2JsonRedisSerializer cacheValueSerializer() {
@@ -75,33 +75,7 @@ public class CacheConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(cacheValueSerializer()))
                 .disableCachingNullValues();
 
-        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
-
-        // Product caches
-        cacheConfigurations.put(CacheNames.PRODUCTS,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-        cacheConfigurations.put(CacheNames.PRODUCT_BY_ID,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-        cacheConfigurations.put(CacheNames.PRODUCTS_BY_CATEGORY,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-        cacheConfigurations.put(CacheNames.PRODUCTS_BY_BRAND,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-        cacheConfigurations.put(CacheNames.PRODUCTS_BY_NAME,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-        cacheConfigurations.put(CacheNames.PRODUCTS_BY_CATEGORY_AND_BRAND,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-        cacheConfigurations.put(CacheNames.PRODUCTS_BY_BRAND_AND_NAME,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-        cacheConfigurations.put(CacheNames.PRODUCT_COUNT,
-                defaultConfig.entryTtl(Duration.ofSeconds(productCacheTtl)));
-
-        // Category caches
-        cacheConfigurations.put(CacheNames.CATEGORIES,
-                defaultConfig.entryTtl(Duration.ofSeconds(categoryCacheTtl)));
-
-        // User caches
-        cacheConfigurations.put(CacheNames.USERS,
-                defaultConfig.entryTtl(Duration.ofSeconds(userCacheTtl)));
+        Map<String, RedisCacheConfiguration> cacheConfigurations = createCacheConfigurations(defaultConfig);
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
@@ -110,30 +84,44 @@ public class CacheConfig {
                 .build();
     }
 
-    public static class CacheNames {
-        public static final String PRODUCTS = "products";
-        public static final String PRODUCT_BY_ID = "product_by_id";
-        public static final String PRODUCTS_BY_CATEGORY = "products_by_category";
-        public static final String PRODUCTS_BY_BRAND = "products_by_brand";
-        public static final String PRODUCTS_BY_NAME = "products_by_name";
-        public static final String PRODUCTS_BY_CATEGORY_AND_BRAND = "products_by_category_and_brand";
-        public static final String PRODUCTS_BY_BRAND_AND_NAME = "products_by_brand_and_name";
-        public static final String PRODUCT_COUNT = "product_count";
-        public static final String CATEGORIES = "categories";
-        public static final String USERS = "users";
+    private Map<String, RedisCacheConfiguration> createCacheConfigurations(RedisCacheConfiguration defaultConfig) {
+        Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
+
+        // Product caches
+        addProductCacheConfigurations(cacheConfigurations, defaultConfig);
+        
+        // Category caches
+        addCategoryCacheConfigurations(cacheConfigurations, defaultConfig);
+        
+        // User caches
+        addUserCacheConfigurations(cacheConfigurations, defaultConfig);
+
+        return cacheConfigurations;
     }
 
-    public static class CacheKeyGenerator {
-        public static String generateKey(String... parts) {
-            return String.join(":", parts);
-        }
+    private void addProductCacheConfigurations(Map<String, RedisCacheConfiguration> cacheConfigurations, 
+                                             RedisCacheConfiguration defaultConfig) {
+        Duration productTtl = Duration.ofSeconds(productCacheTtl);
+        
+        cacheConfigurations.put(CacheConstants.PRODUCTS, defaultConfig.entryTtl(productTtl));
+        cacheConfigurations.put(CacheConstants.PRODUCT_BY_ID, defaultConfig.entryTtl(productTtl));
+        cacheConfigurations.put(CacheConstants.PRODUCTS_BY_CATEGORY, defaultConfig.entryTtl(productTtl));
+        cacheConfigurations.put(CacheConstants.PRODUCTS_BY_BRAND, defaultConfig.entryTtl(productTtl));
+        cacheConfigurations.put(CacheConstants.PRODUCTS_BY_NAME, defaultConfig.entryTtl(productTtl));
+        cacheConfigurations.put(CacheConstants.PRODUCTS_BY_CATEGORY_AND_BRAND, defaultConfig.entryTtl(productTtl));
+        cacheConfigurations.put(CacheConstants.PRODUCTS_BY_BRAND_AND_NAME, defaultConfig.entryTtl(productTtl));
+        cacheConfigurations.put(CacheConstants.PRODUCT_COUNT, defaultConfig.entryTtl(productTtl));
+    }
 
-        public static String generateProductKey(String type, Object... params) {
-            StringBuilder key = new StringBuilder("product:").append(type);
-            for (Object param : params) {
-                key.append(":").append(param != null ? param.toString() : "null");
-            }
-            return key.toString();
-        }
+    private void addCategoryCacheConfigurations(Map<String, RedisCacheConfiguration> cacheConfigurations, 
+                                              RedisCacheConfiguration defaultConfig) {
+        Duration categoryTtl = Duration.ofSeconds(categoryCacheTtl);
+        cacheConfigurations.put(CacheConstants.CATEGORIES, defaultConfig.entryTtl(categoryTtl));
+    }
+
+    private void addUserCacheConfigurations(Map<String, RedisCacheConfiguration> cacheConfigurations, 
+                                          RedisCacheConfiguration defaultConfig) {
+        Duration userTtl = Duration.ofSeconds(userCacheTtl);
+        cacheConfigurations.put(CacheConstants.USERS, defaultConfig.entryTtl(userTtl));
     }
 }

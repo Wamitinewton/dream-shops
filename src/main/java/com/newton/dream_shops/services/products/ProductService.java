@@ -74,7 +74,7 @@ public class ProductService implements IProductService {
     }
 
     @Override
-    @Cacheable(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#productId")
+    @Cacheable(value = CacheConfig.CacheNames.PRODUCT_BY_ID, key = "#id")
     public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id).orElseThrow(() -> new CustomException("Product Not Found"));
         return toProductDto(product);

@@ -97,6 +97,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         user.setFirstName(oAuth2UserInfo.getFirstName() != null ? oAuth2UserInfo.getFirstName() : "");
         user.setLastName(oAuth2UserInfo.getLastName() != null ? oAuth2UserInfo.getLastName() : "");
         user.setEmail(oAuth2UserInfo.getEmail());
+        user.setEnabled(true);
         user.setEmailVerified(true);
         user.setImageUrl(oAuth2UserInfo.getImageUrl());
 

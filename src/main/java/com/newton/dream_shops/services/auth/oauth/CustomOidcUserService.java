@@ -98,6 +98,7 @@ public class CustomOidcUserService extends OidcUserService {
         user.setFirstName(oidcUser.getGivenName() != null ? oidcUser.getGivenName() : "");
         user.setLastName(oidcUser.getFamilyName() != null ? oidcUser.getFamilyName() : "");
         user.setEmail(oidcUser.getEmail());
+        user.setEnabled(true);
         user.setEmailVerified(true);
         user.setImageUrl(oidcUser.getPicture());
 

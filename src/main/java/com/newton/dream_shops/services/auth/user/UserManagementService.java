@@ -1,5 +1,7 @@
 package com.newton.dream_shops.services.auth.user;
 
+import java.util.Optional;
+
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,19 +14,25 @@ import com.newton.dream_shops.dto.auth.UserInfo;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.UserRepository;
+import com.newton.dream_shops.services.auth.otp.IOtpService;
+import com.newton.dream_shops.services.email.IEmailService;
 import com.newton.dream_shops.util.jwt.JwtHelperService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserManagementService implements IUserManagementService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final JwtHelperService jwtHelperService;
+    private IOtpService otpService;
+    private final IEmailService emailService;
 
     @Override
     @Transactional
@@ -194,5 +202,82 @@ public class UserManagementService implements IUserManagementService {
 
         return userInfo;
     }
+
+    
+    @Override
+    @Transactional
+    public void initiatePasswordReset(String email) {
+        if (!StringUtils.hasText(email)) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        try {
+            otpService.generateAndSendPasswordResetOtp(email);
+            log.info("Password reset OTP sent to user: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to send password reset OTP to user: {}", email, e);
+            throw new CustomException("Failed to send password reset email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String email, String otp, String newPassword) {
+        if (!StringUtils.hasText(email) || !StringUtils.hasText(otp) || !StringUtils.hasText(newPassword)) {
+            throw new IllegalArgumentException("Email, OTP, and new password are required");
+        }
+
+        if (!otpService.verifyPasswordResetOtp(email, otp)) {
+            throw new CustomException("Invalid or expired OTP");
+        }
+
+        User user = userRepository.findByEmail(email.toLowerCase().trim())
+                .orElseThrow(() -> new CustomException("User not found"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        try {
+            emailService.sendPasswordResetSuccess(user.getEmail(), user.getFirstName());
+            log.info("Password reset successful for user: {}", user.getEmail());
+        } catch (Exception e) {
+            log.warn("Failed to send password reset success email to user: {}", user.getEmail(), e);
+        }
+    }
+
+      @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        if (StringUtils.hasText(refreshToken)) {
+            jwtHelperService.performLogout(refreshToken);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void logoutAllDevices(HttpServletRequest request) {
+        jwtHelperService.performLogoutAllDevices(request);
+    }
+
+    @Override
+    @Transactional
+    public UserInfo getUserById(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
+        return userRepository.findById(userId)
+                .map(this::mapToUserInfo)
+                .orElseThrow(() -> new CustomException("User with " + userId + " Not found"));
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(HttpServletRequest request) {
+        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
+        logoutAllDevices(request);
+        Optional.ofNullable(userId)
+                .ifPresentOrElse(userRepository::deleteById, () -> {
+                    throw new CustomException("User Not Found");
+                });
+    }
+
 
 }

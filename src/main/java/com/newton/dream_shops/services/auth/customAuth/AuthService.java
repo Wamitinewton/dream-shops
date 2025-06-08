@@ -15,12 +15,15 @@ import com.newton.dream_shops.dto.auth.LoginRequest;
 import com.newton.dream_shops.dto.auth.RefreshTokenRequest;
 import com.newton.dream_shops.dto.auth.SignUpRequest;
 import com.newton.dream_shops.dto.auth.UserInfo;
+import com.newton.dream_shops.dto.auth.VerifyOtpRequest;
 import com.newton.dream_shops.exception.AlreadyExistsException;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.models.auth.RefreshToken;
 import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.RefreshTokenRepository;
 import com.newton.dream_shops.repository.auth.UserRepository;
+import com.newton.dream_shops.services.auth.otp.IOtpService;
+import com.newton.dream_shops.services.email.IEmailService;
 import com.newton.dream_shops.util.jwt.JwtHelperService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -39,6 +42,8 @@ public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
     private final JwtHelperService jwtHelperService;
+    private IOtpService otpService;
+    private final IEmailService emailService;
 
     @Override
     @Transactional
@@ -50,6 +55,21 @@ public class AuthService implements IAuthService {
                 .filter(request -> !userRepository.existsByEmail(request.getEmail()))
                 .map(this::createUser)
                 .map(userRepository::save)
+                .map(user -> {
+                    try {
+                        emailService.sendWelcomeEmail(user.getEmail(), user.getFirstName());
+                    } catch (Exception e) {
+                        log.warn("Failed to send welcome email to user");
+                    }
+
+                    try {
+                        otpService.generateAndSendEmailVerificationOtp(user);
+                    } catch (Exception e) {
+                        log.error("Failed to send email verification otp to user", e);
+                    }
+
+                    return user;
+                })
                 .map(this::mapToUserInfo)
                 .orElseThrow(() -> handleSignUpException(signUpRequest));
     }
@@ -62,6 +82,14 @@ public class AuthService implements IAuthService {
                 .map(this::authenticateUser)
                 .map(auth -> (User) auth.getPrincipal())
                 .map(user -> {
+                    if (!user.isEnabled()) {
+                        throw new CustomException("Account is disabled. Please verify your email first");
+                    }
+
+                    if (!user.getEmailVerified()) {
+                        throw new CustomException("Email not verified. Please check your email for verification");
+                    }
+
                     jwtHelperService.cleanUpExpiredTokens();
                     jwtHelperService.limitActiveTokensPerUser(user.getId());
                     return createJwtResponse(user);
@@ -80,40 +108,6 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    @Transactional
-    public void logout(String refreshToken) {
-        if (StringUtils.hasText(refreshToken)) {
-            jwtHelperService.performLogout(refreshToken);
-        }
-    }
-
-    @Override
-    @Transactional
-    public void logoutAllDevices(HttpServletRequest request) {
-        jwtHelperService.performLogoutAllDevices(request);
-    }
-
-    @Override
-    @Transactional
-    public UserInfo getUserById(HttpServletRequest request) {
-        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
-        return userRepository.findById(userId)
-                .map(this::mapToUserInfo)
-                .orElseThrow(() -> new CustomException("User with " + userId + " Not found"));
-    }
-
-    @Override
-    @Transactional
-    public void deleteUser(HttpServletRequest request) {
-        Long userId = jwtHelperService.getCurrentUserIdFromRequest(request);
-        logoutAllDevices(request);
-        Optional.ofNullable(userId)
-                .ifPresentOrElse(userRepository::deleteById, () -> {
-                    throw new CustomException("User Not Found");
-                });
-    }
-
-    @Override
     public void validateSignUpRequest(SignUpRequest request) {
         Optional.ofNullable(request)
                 .filter(r -> StringUtils.hasText(r.getUsername()))
@@ -122,6 +116,14 @@ public class AuthService implements IAuthService {
                 .filter(r -> StringUtils.hasText(r.getFirstName()))
                 .filter(r -> StringUtils.hasText(r.getLastName()))
                 .orElseThrow(() -> new IllegalArgumentException("All fields are required"));
+    }
+
+    @Override
+    public void validateVerifyOtpRequest(VerifyOtpRequest request) {
+        Optional.ofNullable(request)
+                .filter(r -> StringUtils.hasText(r.getEmail()))
+                .filter(r -> StringUtils.hasText(r.getOtp()))
+                .orElseThrow(() -> new IllegalArgumentException("Email and OTP are required"));
     }
 
     @Override
@@ -147,6 +149,8 @@ public class AuthService implements IAuthService {
             user.setLastName(request.getLastName().trim());
             user.setUsername(request.getUsername().trim().toLowerCase());
             user.setEmail(request.getEmail().trim().toLowerCase());
+            user.setEnabled(false);
+            user.setEmailVerified(false);
             user.setPassword(passwordEncoder.encode(request.getPassword()));
             return user;
         } catch (DataIntegrityViolationException e) {
@@ -243,4 +247,35 @@ public class AuthService implements IAuthService {
     public void limitActiveTokensPerUser(HttpServletRequest request) {
         jwtHelperService.limitActiveTokensForCurrentUser(request);
     }
+
+    @Override
+    @Transactional
+    public void verifyEmailOtp(VerifyOtpRequest verifyOtpRequest) {
+        validateVerifyOtpRequest(verifyOtpRequest);
+
+        try {
+            otpService.activateUserAccount(verifyOtpRequest.getEmail(), verifyOtpRequest.getOtp());
+            log.info("Email verification successful for user: {}", verifyOtpRequest.getEmail());
+        } catch (Exception e) {
+            log.error("Email verification failed for user: {}", verifyOtpRequest.getEmail(), e);
+            throw new CustomException("Email verification failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void resendEmailVerificationOtp(String email) {
+        if (!StringUtils.hasText(email)) {
+            throw new IllegalArgumentException("Email is required");
+        }
+
+        try {
+            otpService.resendEmailVerificationOtp(email);
+            log.info("Email verification OTP resent to user: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to resend email verification OTP to user: {}", email, e);
+            throw new CustomException("Failed to resend verification email: " + e.getMessage());
+        }
+    }
+
 }

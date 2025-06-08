@@ -5,11 +5,13 @@ import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.response.ApiResponse;
 import com.newton.dream_shops.services.auth.customAuth.IAuthService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
@@ -57,13 +59,25 @@ public class AuthController {
 
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse> logout(@RequestBody RefreshTokenRequest request) {
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse> verifyEmail(@Valid @RequestBody VerifyOtpRequest verifyOtpRequest) {
         try {
-            authService.logout(request.getRefreshToken());
-            return ResponseEntity.ok(new ApiResponse("Logout successful", null));
-        } catch (CustomException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            authService.verifyEmailOtp(verifyOtpRequest);
+            return ResponseEntity.ok(new ApiResponse("Email verified successfully! Your account is now active", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(BAD_REQUEST)
+                    .body(new ApiResponse(e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse> resendEmailVerification(@RequestParam String email) {
+        try {
+            authService.resendEmailVerificationOtp(email);
+            return ResponseEntity
+                    .ok(new ApiResponse("Verification email sent successfully! Please check your inbox.", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse(e.getMessage(), null));
         }
     }

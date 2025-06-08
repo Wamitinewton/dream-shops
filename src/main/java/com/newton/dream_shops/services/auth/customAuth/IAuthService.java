@@ -10,52 +10,24 @@ import org.springframework.security.core.Authentication;
 
 public interface IAuthService {
 
-    /**
-     * Register a new user
-     *
-     * @param signUpRequest the sign-up request containing user details
-     * @return UserInfo containing the registered user's information
-     */
     UserInfo signUp(SignUpRequest signUpRequest);
 
-    /**
-     * Authenticate user and generate JWT tokens
-     *
-     * @param loginRequest the login request containing credentials
-     * @return JwtResponse containing access token, refresh token and user info
-     */
     JwtResponse login(LoginRequest loginRequest);
 
-    /**
-     * Refresh access token using refresh token
-     *
-     * @param refreshTokenRequest the refresh token request
-     * @return JwtResponse containing new access token, refresh token and user info
-     */
     JwtResponse refreshToken(RefreshTokenRequest refreshTokenRequest);
 
-    /**
-     * Logout user by revoking refresh token
-     *
-     * @param refreshToken the refresh token to revoke
-     */
-    void logout(String refreshToken);
 
-    /**
-     * Logout user from all devices by revoking all refresh tokens
-     *
-     * @param userId the user ID
-     */
-    void logoutAllDevices(HttpServletRequest request);
+    void verifyEmailOtp(VerifyOtpRequest verifyOtpRequest);
 
-    UserInfo getUserById(HttpServletRequest request);
-    void deleteUser(HttpServletRequest request);
+    void resendEmailVerificationOtp(String email);
 
     void validateSignUpRequest(SignUpRequest request);
 
     void validateLoginRequest(LoginRequest request);
 
     void validateRefreshTokenRequest(RefreshTokenRequest request);
+
+    void validateVerifyOtpRequest(VerifyOtpRequest request);
 
     User createUser(SignUpRequest request);
 

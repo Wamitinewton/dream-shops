@@ -1,11 +1,12 @@
 package com.newton.dream_shops.controller.auth;
 
+import com.newton.dream_shops.dto.auth.PasswordResetRequest;
+import com.newton.dream_shops.dto.auth.RefreshTokenRequest;
 import com.newton.dream_shops.dto.auth.UpdatePasswordRequest;
 import com.newton.dream_shops.dto.auth.UpdateProfileRequest;
 import com.newton.dream_shops.dto.auth.UserInfo;
 import com.newton.dream_shops.exception.CustomException;
 import com.newton.dream_shops.response.ApiResponse;
-import com.newton.dream_shops.services.auth.customAuth.IAuthService;
 import com.newton.dream_shops.services.auth.user.IUserManagementService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,13 +21,12 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final IAuthService authService;
     private final IUserManagementService userManagementService;
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse> getUserDetailsById(HttpServletRequest request) {
         try {
-            UserInfo userInfo = authService.getUserById(request);
+            UserInfo userInfo = userManagementService.getUserById(request);
             return ResponseEntity.ok(new ApiResponse("Successfully found user details", userInfo));
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -37,7 +37,7 @@ public class UserController {
     @DeleteMapping("/delete-user/delete")
     public ResponseEntity<ApiResponse> deleteUserByUserId(HttpServletRequest request) {
         try {
-            authService.deleteUser(request);
+            userManagementService.deleteUser(request);
             return ResponseEntity.ok(new ApiResponse("Successfully deleted account", null));
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -49,7 +49,7 @@ public class UserController {
     public ResponseEntity<ApiResponse> logOutAllDevices(HttpServletRequest request) {
         try {
 
-            authService.logoutAllDevices(request);
+            userManagementService.logoutAllDevices(request);
             return ResponseEntity.ok(new ApiResponse("Logout successful", null));
         } catch (CustomException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -93,6 +93,44 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse("Profile update failed. Please try again.", null));
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(@RequestBody RefreshTokenRequest request) {
+        try {
+            userManagementService.logout(request.getRefreshToken());
+            return ResponseEntity.ok(new ApiResponse("Logout successful", null));
+        } catch (CustomException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse> forgotPassword(@RequestParam String email) {
+        try {
+            userManagementService.initiatePasswordReset(email);
+            return ResponseEntity
+                    .ok(new ApiResponse("Password reset email sent successfully! Please check your inbox.", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse> resetPassword(@Valid @RequestBody PasswordResetRequest passwordResetRequest) {
+        try {
+            userManagementService.resetPassword(
+                    passwordResetRequest.getEmail(),
+                    passwordResetRequest.getOtp(),
+                    passwordResetRequest.getNewPassword());
+            return ResponseEntity
+                    .ok(new ApiResponse("Password reset successful! You can now login with your new password.", null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(e.getMessage(), null));
         }
     }
 }

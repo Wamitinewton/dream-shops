@@ -67,7 +67,12 @@ public class SecurityConfig {
                 .exceptionHandling(
                         exceptionHandling -> exceptionHandling.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/**").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/api/v1/user/forgot-password",
+                                "/api/v1/user/reset-password",
+                                "/api/v1/auth/**")
+                        .permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/oauth_test_page.html").permitAll()

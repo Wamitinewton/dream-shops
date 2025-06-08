@@ -6,6 +6,7 @@ import com.newton.dream_shops.models.auth.User;
 import com.newton.dream_shops.repository.auth.UserRepository;
 import com.newton.dream_shops.security.oauth.OAuth2UserPrincipal;
 import com.newton.dream_shops.services.cart.cart.ICartService;
+import com.newton.dream_shops.services.email.IEmailService;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -24,6 +25,7 @@ public class CustomOidcUserService extends OidcUserService {
 
     private final UserRepository userRepository;
     private final ICartService cartService;
+    private final IEmailService emailService;
 
     @Override
     @Transactional
@@ -50,6 +52,8 @@ public class CustomOidcUserService extends OidcUserService {
         Optional<User> userOptional = userRepository.findByEmail(email);
         User user;
 
+        boolean isNewUser = false;
+
         if (userOptional.isPresent()) {
             user = userOptional.get();
 
@@ -72,12 +76,17 @@ public class CustomOidcUserService extends OidcUserService {
             }
         } else {
             user = registerNewUser(userRequest, oidcUser);
+            isNewUser = true;
         }
 
         // Create cart for the user if it doesn't exist
         try {
             cartService.getOrCreateCartForUser(user.getId());
         } catch (Exception e) {
+        }
+
+        if (isNewUser) {
+            sendWelcomeEmail(user);
         }
 
         OAuth2UserPrincipal principal = new OAuth2UserPrincipal(
@@ -155,5 +164,14 @@ public class CustomOidcUserService extends OidcUserService {
         }
 
         return username;
+    }
+
+    private void sendWelcomeEmail(User user) {
+        try {
+            String firstName = StringUtils.hasText(user.getFirstName()) ? user.getFirstName() : "Valued Customer";
+            emailService.sendWelcomeEmail(user.getEmail(), firstName);
+        } catch (Exception e) {
+
+        }
     }
 }

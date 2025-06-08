@@ -31,7 +31,7 @@ public class UserManagementService implements IUserManagementService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
     private final JwtHelperService jwtHelperService;
-    private IOtpService otpService;
+    private final IOtpService otpService;
     private final IEmailService emailService;
 
     @Override

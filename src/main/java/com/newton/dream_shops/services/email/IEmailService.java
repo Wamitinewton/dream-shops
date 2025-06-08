@@ -1,6 +1,10 @@
 package com.newton.dream_shops.services.email;
 
+import com.newton.dream_shops.dto.email.EmailRequest;
+
 public interface IEmailService {
+
+    public void sendEmail(EmailRequest emailRequest);
     
     /**
      * Send OTP for user sign up verification

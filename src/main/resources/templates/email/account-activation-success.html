@@ -112,24 +112,42 @@
             color: #2d3748;
             font-size: 18px;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             text-align: center;
         }
         
-        .feature-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
+        /* Improved features layout - using CSS Grid for better email client support */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-width: 100%;
         }
         
         .feature-item {
             font-size: 14px;
             color: #4a5568;
-            padding: 8px 16px;
+            padding: 12px 16px;
             background-color: white;
-            border-radius: 20px;
+            border-radius: 8px;
             border: 1px solid #e2e8f0;
+            text-align: center;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        
+        /* Fallback for email clients that don't support grid */
+        @supports not (display: grid) {
+            .feature-grid {
+                display: block;
+            }
+            
+            .feature-item {
+                display: inline-block;
+                width: 48%;
+                margin: 0 1% 12px 1%;
+                vertical-align: top;
+            }
         }
         
         .footer {
@@ -187,18 +205,75 @@
                 text-align: center;
             }
             
-            .feature-list {
-                flex-direction: column;
-                align-items: center;
+            /* Mobile-first approach for features */
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            /* Fallback for non-grid supporting email clients on mobile */
+            @supports not (display: grid) {
+                .feature-item {
+                    display: block;
+                    width: 100%;
+                    margin: 0 0 10px 0;
+                }
             }
             
             .feature-item {
-                width: 100%;
-                text-align: center;
+                padding: 10px 12px;
+                font-size: 13px;
             }
             
             .footer {
                 padding: 25px 20px;
+            }
+        }
+        
+        /* Extra small screens */
+        @media (max-width: 480px) {
+            .features {
+                padding: 20px 15px;
+            }
+            
+            .content {
+                padding: 25px 15px;
+            }
+            
+            .header {
+                padding: 25px 15px;
+            }
+            
+            .success-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .header p {
+                font-size: 14px;
+            }
+        }
+        
+        /* Outlook-specific fixes */
+        @media screen and (-webkit-min-device-pixel-ratio: 0) {
+            .feature-grid {
+                display: -webkit-box !important;
+                display: -ms-flexbox !important;
+                display: flex !important;
+                -ms-flex-wrap: wrap !important;
+                flex-wrap: wrap !important;
+            }
+            
+            .feature-item {
+                -webkit-box-flex: 0 !important;
+                -ms-flex: 0 0 48% !important;
+                flex: 0 0 48% !important;
+                margin: 0 1% 12px 1% !important;
             }
         }
     </style>
@@ -230,12 +305,13 @@
             
             <div class="features">
                 <h3>What you can do now:</h3>
-                <div class="feature-list">
+                <div class="feature-grid">
                     <div class="feature-item">🛍️ Browse Products</div>
                     <div class="feature-item">❤️ Save Favorites</div>
                     <div class="feature-item">🚚 Fast Checkout</div>
                     <div class="feature-item">📱 Track Orders</div>
                     <div class="feature-item">🎁 Exclusive Deals</div>
+                    <div class="feature-item">🔔 Get Notifications</div>
                 </div>
             </div>
             

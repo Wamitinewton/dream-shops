@@ -42,7 +42,7 @@ public class AuthService implements IAuthService {
     private final AuthenticationManager authenticationManager;
     private final ModelMapper modelMapper;
     private final JwtHelperService jwtHelperService;
-    private IOtpService otpService;
+    private final IOtpService otpService;
     private final IEmailService emailService;
 
     @Override

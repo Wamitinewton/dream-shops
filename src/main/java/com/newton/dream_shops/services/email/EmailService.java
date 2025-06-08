@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import com.newton.dream_shops.dto.email.EmailRequest;
 import com.newton.dream_shops.exception.EmailServiceException;
 
 import jakarta.mail.MessagingException;
@@ -38,13 +39,58 @@ public class EmailService implements IEmailService {
     private int otpExpiryMinutes;
 
     @Override
+    public void sendEmail(EmailRequest emailRequest) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail, fromName);
+            helper.setTo(emailRequest.getTo());
+            helper.setSubject(emailRequest.getSubject());
+            helper.setReplyTo(fromEmail);
+
+            message.setHeader("X-Priority", "1");
+            message.setHeader("X-MSMail-Priority", "High");
+            message.setHeader("X-Mailer", "Dream Shops");
+            message.setHeader("X-Auto-Response-Suppress", "OOF, AutoReply");
+
+            String content;
+            if (emailRequest.getTemplateName() != null && !emailRequest.getTemplateName().isEmpty()) {
+                content = processTemplate(emailRequest.getTemplateName(), emailRequest.getVariables());
+            } else {
+                content = "Default email content";
+            }
+
+            if (emailRequest.isHtml()) {
+                helper.setText(generatePlainTextVersion(content), content);
+            } else {
+                helper.setText(content, false);
+            }
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new EmailServiceException("Failed to send email: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new EmailServiceException("Failed to send email due to unexpected error", e);
+        }
+    }
+
+    @Override
     public void sendSignUpOtp(String email, String otp, String firstName) {
         Map<String, Object> variables = buildCommonVariables();
         variables.put("firstName", firstName);
         variables.put("otp", otp);
         variables.put("expiryMinutes", otpExpiryMinutes);
 
-        sendTemplateEmail(email, "🔐 Verify Your Account - Dream Shops", "signup-otp", variables);
+        EmailRequest emailRequest = EmailRequest.builder()
+                .to(email)
+                .subject("🔐 Verify Your Account - Dream Shops")
+                .templateName("signup-otp")
+                .variables(variables)
+                .isHtml(true)
+                .build();
+
+        sendEmail(emailRequest);
     }
 
     @Override
@@ -55,7 +101,15 @@ public class EmailService implements IEmailService {
         variables.put("expiryMinutes", otpExpiryMinutes);
         variables.put("timestamp", getCurrentTimestamp());
 
-        sendTemplateEmail(email, "🔑 Reset Your Password - Dream Shops", "forgot-password-otp", variables);
+        EmailRequest emailRequest = EmailRequest.builder()
+                .to(email)
+                .subject("🔑 Reset Your Password - Dream Shops")
+                .templateName("forgot-password-otp")
+                .variables(variables)
+                .isHtml(true)
+                .build();
+
+        sendEmail(emailRequest);
     }
 
     @Override
@@ -64,7 +118,15 @@ public class EmailService implements IEmailService {
         variables.put("firstName", firstName);
         variables.put("timestamp", getCurrentTimestamp());
 
-        sendTemplateEmail(email, "✅ Password Reset Successful - Dream Shops", "password-reset-success", variables);
+        EmailRequest emailRequest = EmailRequest.builder()
+                .to(email)
+                .subject("✅ Password Reset Successful - Dream Shops")
+                .templateName("password-reset-success")
+                .variables(variables)
+                .isHtml(true)
+                .build();
+
+        sendEmail(emailRequest);
     }
 
     @Override
@@ -73,7 +135,15 @@ public class EmailService implements IEmailService {
         variables.put("firstName", firstName);
         variables.put("shopUrl", frontendUrl + "/shop");
 
-        sendTemplateEmail(email, "🎉 Welcome to Dream Shops!", "welcome", variables);
+        EmailRequest emailRequest = EmailRequest.builder()
+                .to(email)
+                .subject("🎉 Welcome to Dream Shops!")
+                .templateName("welcome")
+                .variables(variables)
+                .isHtml(true)
+                .build();
+
+        sendEmail(emailRequest);
     }
 
     @Override
@@ -83,46 +153,22 @@ public class EmailService implements IEmailService {
         variables.put("shopUrl", frontendUrl + "/shop");
         variables.put("profileUrl", frontendUrl + "/profile");
 
-        sendTemplateEmail(email, "✅ Account Activated - Dream Shops", "account-activation-success", variables);
-    }
+        EmailRequest emailRequest = EmailRequest.builder()
+                .to(email)
+                .subject("✅ Account Activated - Dream Shops")
+                .templateName("account-activation-success")
+                .variables(variables)
+                .isHtml(true)
+                .build();
 
-    private void sendTemplateEmail(String to, String subject, String templateName, Map<String, Object> variables) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail, fromName);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setReplyTo(fromEmail);
-
-            setEmailHeaders(message);
-
-            String htmlContent = processTemplate(templateName, variables);
-            String textContent = generatePlainTextVersion(htmlContent);
-
-            helper.setText(textContent, htmlContent);
-
-            mailSender.send(message);
-
-        } catch (MessagingException e) {
-            throw new EmailServiceException("Failed to send email: " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new EmailServiceException("Failed to send email due to unexpected error", e);
-        }
-    }
-
-    private void setEmailHeaders(MimeMessage message) throws MessagingException {
-        message.setHeader("X-Priority", "1");
-        message.setHeader("X-MSMail-Priority", "High");
-        message.setHeader("X-Mailer", "Dream Shops");
-        message.setHeader("X-Auto-Response-Suppress", "OOF, AutoReply");
-        message.setHeader("Content-Type", "text/html; charset=UTF-8");
+        sendEmail(emailRequest);
     }
 
     private String processTemplate(String templateName, Map<String, Object> variables) {
         Context context = new Context();
-        context.setVariables(variables);
+        if (variables != null) {
+            context.setVariables(variables);
+        }
         return templateEngine.process("email/" + templateName, context);
     }
 

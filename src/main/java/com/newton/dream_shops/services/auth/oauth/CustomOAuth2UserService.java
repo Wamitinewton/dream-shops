@@ -8,8 +8,11 @@ import com.newton.dream_shops.models.oauth2.OAuth2UserInfoFactory;
 import com.newton.dream_shops.repository.auth.UserRepository;
 import com.newton.dream_shops.security.oauth.OAuth2UserPrincipal;
 import com.newton.dream_shops.services.cart.cart.ICartService;
+import com.newton.dream_shops.services.email.IEmailService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -22,10 +25,12 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final ICartService cartService;
+    private final IEmailService emailService;
 
     @Override
     @Transactional
@@ -56,6 +61,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Optional<User> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
         User user;
 
+        boolean isNewUser = false;
+
         if (userOptional.isPresent()) {
             user = userOptional.get();
 
@@ -75,12 +82,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             user = updateExistingUser(user, oAuth2UserInfo);
         } else {
             user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
+            isNewUser = true;
         }
 
         // Create cart for the user if it doesn't exist
         try {
             cartService.getOrCreateCartForUser(user.getId());
         } catch (Exception e) {
+        }
+
+        if (isNewUser) {
+            sendWelcomeEmail(user);
         }
 
         OAuth2UserPrincipal principal = new OAuth2UserPrincipal(user, oAuth2User.getAttributes());
@@ -156,5 +168,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
 
         return username;
+    }
+
+    private void sendWelcomeEmail(User user) {
+        try {
+            String firstName = StringUtils.hasText(user.getFirstName()) ? user.getFirstName() : "Valued Customer";
+            emailService.sendWelcomeEmail(user.getEmail(), firstName);
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to OAuth2 user {}: {}", user.getEmail(), e.getMessage());
+
+        }
     }
 }

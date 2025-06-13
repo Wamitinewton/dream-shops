@@ -71,11 +71,14 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/user/forgot-password",
                                 "/api/v1/user/reset-password",
-                                "/api/v1/auth/**")
+                                "/api/v1/auth/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/actuator/health",
+                                "/oauth2/**",
+                                "/oauth_test_page.html")
                         .permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/oauth2/**").permitAll()
-                        .requestMatchers("/oauth_test_page.html").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authorization -> authorization

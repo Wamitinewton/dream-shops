@@ -1,4 +1,4 @@
-package com.newton.dream_shops.health;
+package com.newton.dream_shops.config;
 
 import java.util.Properties;
 

@@ -5,7 +5,7 @@ spring:
     import: "file:keys.properties"
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         default_schema: public
@@ -95,6 +95,11 @@ app:
   jwtRefreshExpirationMs: ${jwt.refresh.expiration.ms}
   oauth2:
     authorizedRedirectUri: ${oauth2.authorized.redirect.uri}
+
+    mobileRedirectUri: ${oauth2.mobile.redirect.uri}
+    webRedirectUri: ${oauth2.web.redirect.uri}
+    # Fallback custom scheme for mobile
+    mobileCustomSchemeUri: ${oauth2.mobile.custom.scheme.uri}
   cache:
     ttl:
       products: 600 
